@@ -1,0 +1,30 @@
+<!-- res/menu/records_menu.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_clear_all"
+        android:title="Clear All Expenses"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sort"
+        android:title="Sort By"
+        android:orderInCategory="100"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_sort_by_date"
+                android:title="Date" />
+            <item
+                android:id="@+id/action_sort_by_amount"
+                android:title="Amount" />
+            <item
+                android:id="@+id/action_sort_by_category"
+                android:title="Category" />
+
+            <!-- Add more sorting options as needed -->
+        </menu>
+    </item>
+
+</menu>

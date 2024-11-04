@@ -1,0 +1,40 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/white">
+
+    <!-- Main content of the Analysis Fragment -->
+    <LinearLayout
+        android:id="@+id/linear_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_alignParentTop="true"
+    android:layout_marginBottom="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"/>
+
+    <!-- Additional content here if needed -->
+
+</LinearLayout>
+
+    <!-- Pie Chart centered horizontally below the main content -->
+<com.github.mikephil.charting.charts.PieChart
+android:id="@+id/pie_chart"
+android:layout_width="match_parent"
+android:layout_height="300dp"
+android:layout_below="@id/linear_layout"
+android:layout_marginTop="16dp"
+android:layout_centerHorizontal="true" />
+
+    <!-- Floating Action Button positioned at the bottom-right -->
+    <!-- Floating Action Button for adding expenses -->
+
+</RelativeLayout>

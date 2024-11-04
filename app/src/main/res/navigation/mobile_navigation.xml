@@ -1,0 +1,38 @@
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/navigation_records">
+
+    <!-- Existing Fragments -->
+    <fragment
+        android:id="@+id/navigation_records"
+        android:name="com.example.my_budget_tracker.ui.RecordsFragment"
+        android:label="Records"
+        tools:layout="@layout/fragment_records" />
+
+    <fragment
+        android:id="@+id/navigation_analysis"
+        android:name="com.example.my_budget_tracker.ui.AnalysisFragment"
+        android:label="Analysis"
+        tools:layout="@layout/fragment_analysis" />
+
+    <fragment
+        android:id="@+id/navigation_budget"
+        android:name="com.example.my_budget_tracker.ui.BudgetFragment"
+        android:label="Budget"
+        tools:layout="@layout/fragment_budget" />
+
+    <fragment
+        android:id="@+id/navigation_categories"
+        android:name="com.example.my_budget_tracker.ui.CategoriesFragment"
+        android:label="Categories"
+        tools:layout="@layout/fragment_categories" />
+
+    <!-- New Fragment for Add Expense -->
+    <fragment
+        android:id="@+id/addExpenseFragment"
+        android:name="com.example.my_budget_tracker.ui.AddExpenseFragment"
+        android:label="Add Expense"
+        tools:layout="@layout/fragment_add_expense" />
+
+</navigation>

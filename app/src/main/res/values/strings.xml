@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">My-Budget-Tracker</string>
+    <string name="title_records">Records</string>
+    <string name="title_analysis">Analysis</string>
+    <string name="title_budget">Budget</string>
+    <string name="title_categories">Categories</string>
+    <string name="add_expense_description">Add Expense</string>
+    <string name="select_category">Select a Category</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="add_expense">Add Expense</string>
+
+    <!-- Add the missing string resource -->
+    <string name="expense_icon_desc">Expense Icon</string>
+
+    <string-array name="expense_categories">
+        <item>Food</item>
+        <item>Health</item>
+        <item>Education</item>
+        <item>Insurance</item>
+        <item>Shopping</item>
+        <item>Bills</item>
+    </string-array>
+
+</resources>

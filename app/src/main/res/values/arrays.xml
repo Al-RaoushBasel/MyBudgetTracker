@@ -1,0 +1,9 @@
+<!-- res/values/arrays.xml -->
+<resources>
+    <string-array name="categories">
+        <item>Category 1</item>
+        <item>Category 2</item>
+        <item>Category 3</item>
+        <!-- Add other categories as needed -->
+    </string-array>
+</resources>
