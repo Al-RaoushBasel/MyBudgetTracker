@@ -13,6 +13,7 @@
 
     <!-- Add the missing string resource -->
     <string name="expense_icon_desc">Expense Icon</string>
+    <string name="total_spending">Total Spending: $</string>
 
     <string-array name="expense_categories">
         <item>Food</item>
