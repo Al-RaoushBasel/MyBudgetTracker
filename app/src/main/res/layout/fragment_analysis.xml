@@ -8,6 +8,17 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monthly Expense Summary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"
+        android:layout_gravity="center_horizontal" />
+
+
     <!-- Pie Chart -->
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/pie_chart"
@@ -16,13 +27,13 @@
         android:layout_marginBottom="16dp"
         android:layout_gravity="center_horizontal"/>
 
-    <!-- Total Spending Card -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="8dp"
+        android:background="@drawable/card_bg_gradient"> <!-- Apply gradient here -->
 
         <TextView
             android:id="@+id/total_spending"
@@ -34,13 +45,15 @@
             android:textColor="@android:color/black" />
     </com.google.android.material.card.MaterialCardView>
 
+
     <!-- Highest Expense Category Card -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="8dp"
+        android:background="@drawable/card_bg_gradient">
 
         <TextView
             android:id="@+id/highest_expense_category"
@@ -58,7 +71,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="8dp"
+        android:background="@drawable/card_bg_gradient">
 
         <TextView
             android:id="@+id/average_daily_spending"
@@ -76,7 +90,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         app:cardElevation="4dp"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="8dp"
+        android:background="@drawable/card_bg_gradient">
 
         <TextView
             android:id="@+id/expense_comparison"

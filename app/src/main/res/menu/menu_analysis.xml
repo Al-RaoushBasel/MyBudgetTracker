@@ -1,0 +1,6 @@
+<!-- res/menu/menu_analysis.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_highlight_highest"
+        android:title="Highlight Highest Expense" />
+</menu>
