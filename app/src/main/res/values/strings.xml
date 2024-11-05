@@ -24,4 +24,13 @@
         <item>Bills</item>
     </string-array>
 
+    <string-array name="category_options">
+        <item>Food</item>
+        <item>Health</item>
+        <item>Shopping</item>
+        <item>Insurance</item>
+        <item>Entertainment</item>
+    </string-array>
+
+
 </resources>

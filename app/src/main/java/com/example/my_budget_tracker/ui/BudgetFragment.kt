@@ -5,56 +5,97 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.viewModels
 import com.example.my_budget_tracker.R
+import com.example.my_budget_tracker.data.Budget
+import com.example.my_budget_tracker.data.CategoryBudget
+import com.example.my_budget_tracker.data.ExpenseDatabase
+import com.example.my_budget_tracker.databinding.FragmentBudgetBinding
+import com.example.my_budget_tracker.ViewModel.BudgetViewModel
+import com.example.my_budget_tracker.ViewModel.BudgetViewModelFactory
+import com.google.android.material.snackbar.Snackbar
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [BudgetFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class BudgetFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+    private var _binding: FragmentBudgetBinding? = null
+    private val binding get() = _binding!!
+
+    private val budgetViewModel: BudgetViewModel by viewModels {
+        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
+        BudgetViewModelFactory(budgetDao)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_budget, container, false)
+    ): View {
+        _binding = FragmentBudgetBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment budget.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            BudgetFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Handle Save Overall Budget
+        binding.saveBudgetButton.setOnClickListener {
+            val overallBudget = binding.overallBudgetInput.text.toString().toDoubleOrNull()
+            if (overallBudget != null) {
+                saveOverallBudget(overallBudget)
+                Snackbar.make(view, "Overall Budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+                updateSummary()
+            } else {
+                Snackbar.make(view, "Please enter a valid budget amount", Snackbar.LENGTH_SHORT).show()
             }
+        }
+
+        // Handle Save Category Budgets
+        binding.saveCategoryBudgetButton.setOnClickListener {
+            val category = binding.categorySpinner.selectedItem.toString()
+            val budgetAmount = binding.categoryBudgetInput.text.toString().toDoubleOrNull()
+            if (budgetAmount != null) {
+                saveCategoryBudget(category, budgetAmount)
+                Snackbar.make(view, "$category budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+                updateSummary()
+            } else {
+                Snackbar.make(view, "Please enter a valid amount", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+
+        // Load initial summary
+        updateSummary()
+    }
+
+    private fun saveOverallBudget(overallBudget: Double) {
+        val budget = Budget(overallBudget = overallBudget) // Update with correct variable name
+        budgetViewModel.insertBudget(budget)
+    }
+
+    private fun saveCategoryBudget(categoryName: String, budgetAmount: Double) {
+        val categoryBudget = CategoryBudget(categoryName = categoryName, budgetAmount = budgetAmount)
+        budgetViewModel.insertCategoryBudget(categoryBudget)
+    }
+
+    private fun updateSummary() {
+        // Fetch overall budget and expenses from the ViewModel
+        budgetViewModel.getOverallBudget().observe(viewLifecycleOwner) { budget ->
+            val totalBudget = budget?.overallBudget ?: 0.00
+            binding.totalBudgetSummary.text = "Total Budget: $$totalBudget"
+
+            budgetViewModel.getTotalExpenses().observe(viewLifecycleOwner) { totalExpenses ->
+                val expenses = totalExpenses ?: 0.00
+                binding.totalExpensesSummary.text = "Total Expenses: $$expenses"
+
+                // Calculate the remaining budget
+                val remainingBudget = totalBudget - expenses
+                binding.remainingBudgetSummary.text = "Remaining Budget: $$remainingBudget"
+            }
+        }
+    }
+
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
