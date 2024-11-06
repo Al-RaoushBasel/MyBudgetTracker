@@ -13,7 +13,7 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<CategoryBudget>() {
             override fun areItemsTheSame(oldItem: CategoryBudget, newItem: CategoryBudget): Boolean {
-                return oldItem.categoryName == newItem.categoryName // or any unique identifier
+                return oldItem.categoryName == newItem.categoryName
             }
 
             override fun areContentsTheSame(oldItem: CategoryBudget, newItem: CategoryBudget): Boolean {
@@ -31,26 +31,47 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
         holder.bind(getItem(position))
     }
 
-    fun updateCategoryProgress(categoryName: String, remainingBudget: Double, totalBudget: Double, totalExpenses: Double) {
-        // Locate the correct item in the RecyclerView by categoryName
-        // Update the progress bar and budget summary for the specific category
-        val index = currentList.indexOfFirst { it.categoryName == categoryName }
-        if (index != -1) {
-            val categoryBudget = currentList[index].copy(remainingAmount = remainingBudget)
-            val updatedList = currentList.toMutableList()
-            updatedList[index] = categoryBudget
-            submitList(updatedList)
+    // ViewHolder for each category budget item
+    inner class CategoryBudgetViewHolder(private val binding: ItemCategoryBudgetBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(categoryBudget: CategoryBudget) {
+            binding.categoryName.text = categoryBudget.categoryName
+            binding.budgetAmount.text = "Budget Amount: $${categoryBudget.budgetAmount}"
+
+            // Initialize progress and remaining budget details
+            val remainingBudget = categoryBudget.remainingAmount
+            val expenses = categoryBudget.budgetAmount - remainingBudget
+            val progress = if (categoryBudget.budgetAmount > 0) {
+                (expenses / categoryBudget.budgetAmount * 100).toInt()
+            } else {
+                0
+            }
+            binding.categoryBudgetProgress.progress = progress
+            binding.categoryBudgetDetails.text = "Used $$expenses out of $${categoryBudget.budgetAmount}"
+        }
+
+        // Additional method to update progress dynamically
+        fun updateProgress(remainingBudget: Double, totalBudget: Double, expenses: Double) {
+            val progress = if (totalBudget > 0) {
+                (expenses / totalBudget * 100).toInt()
+            } else {
+                0
+            }
+            binding.categoryBudgetProgress.progress = progress
+            binding.categoryBudgetDetails.text = "Used $$expenses out of $$totalBudget"
         }
     }
 
-
-    private lateinit var adapter: CategoryBudgetAdapter
-
-
-    class CategoryBudgetViewHolder(private val binding: ItemCategoryBudgetBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(categoryBudget: CategoryBudget) {
-            binding.categoryName.text = categoryBudget.categoryName
-            binding.budgetAmount.text = "$${categoryBudget.budgetAmount}"
+    // Function to update the category's progress and notify UI
+    fun updateCategoryProgress(categoryName: String, remainingBudget: Double, totalBudget: Double, expenses: Double, progress: Int) {
+        val position = currentList.indexOfFirst { it.categoryName == categoryName }
+        if (position != -1) {
+            // Update the item in the list and notify the ViewHolder to refresh
+            val updatedCategory = currentList[position].copy(
+                remainingAmount = remainingBudget,
+                budgetAmount = totalBudget
+            )
+            submitList(currentList.toMutableList().apply { set(position, updatedCategory) })
+            notifyItemChanged(position)
         }
     }
 }

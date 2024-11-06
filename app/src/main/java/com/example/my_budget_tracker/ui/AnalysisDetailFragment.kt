@@ -126,19 +126,31 @@ class AnalysisDetailFragment : Fragment() {
     }
 
     private fun updateCategoryBudgetUI(categoryBudgets: List<CategoryBudget>) {
-        // Update each category's progress in the UI
         categoryBudgets.forEach { categoryBudget ->
             budgetViewModel.getCategoryExpenses(categoryBudget.categoryName).observe(viewLifecycleOwner) { totalExpenses ->
-                val remainingBudget = categoryBudget.budgetAmount - (totalExpenses ?: 0.0)
+                val expenses = totalExpenses ?: 0.0
+                val remainingBudget = categoryBudget.budgetAmount - expenses
+                val progress = if (categoryBudget.budgetAmount > 0) {
+                    (expenses / categoryBudget.budgetAmount * 100).toInt()
+                } else {
+                    0
+                }
 
-                // Update each category's remaining budget in the RecyclerView
-                adapter.updateCategoryProgress(categoryBudget.categoryName, remainingBudget, categoryBudget.budgetAmount, totalExpenses ?: 0.0)
+                adapter.updateCategoryProgress(
+                    categoryName = categoryBudget.categoryName,
+                    remainingBudget = remainingBudget,
+                    totalBudget = categoryBudget.budgetAmount,
+                    expenses = expenses,
+                    progress = progress
+                )
 
-                // Update remaining budget in the database, if needed
+                // Update the remaining budget in the database if necessary
                 budgetViewModel.updateCategoryRemainingBudget(categoryBudget.categoryName, remainingBudget)
             }
         }
     }
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()
