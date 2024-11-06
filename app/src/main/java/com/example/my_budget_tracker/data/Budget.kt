@@ -5,9 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "budget")
 data class Budget(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val monthlyIncome: Double = 0.0,    // User's total monthly income
+    @PrimaryKey val id: Int = 1, // Ensures only one row exists
     val overallBudget: Double = 0.0,
-    val amount: Double = 0.0,    // Total budget amount set by the user
-    val remainingBudget: Double = overallBudget - amount  // Optional: can dynamically adjust based on usage
+    val monthlyIncome: Double = 0.0,
+    val totalExpenses: Double = 0.0,
+    val remainingBudget: Double = 0.0
 )
+

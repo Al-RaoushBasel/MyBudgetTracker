@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph">
 
+    <!-- Define fragments only once -->
     <fragment
         android:id="@+id/navigation_records"
         android:name="com.example.my_budget_tracker.ui.RecordsFragment"
@@ -20,7 +21,13 @@
         android:id="@+id/navigation_budget"
         android:name="com.example.my_budget_tracker.ui.BudgetFragment"
         android:label="Budget"
-        tools:layout="@layout/fragment_budget" />
+        tools:layout="@layout/fragment_budget">
+
+        <!-- Action to navigate to AnalysisDetailFragment -->
+        <action
+            android:id="@+id/action_budgetFragment_to_analysisDetailFragment"
+            app:destination="@id/navigation_analysis_detail" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_categories"
@@ -34,5 +41,11 @@
         android:name="com.example.my_budget_tracker.ui.AddExpenseFragment"
         android:label="Add Expense"
         tools:layout="@layout/fragment_add_expense" />
+
+    <fragment
+        android:id="@+id/navigation_analysis_detail"
+        android:name="com.example.my_budget_tracker.ui.AnalysisDetailFragment"
+        android:label="Analysis Detail"
+        tools:layout="@layout/fragment_analysis_detail" />
 
 </navigation>

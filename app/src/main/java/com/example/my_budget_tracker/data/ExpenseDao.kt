@@ -17,6 +17,12 @@ interface ExpenseDao {
     @Query("SELECT * FROM expense ORDER BY date DESC")
     fun getAllExpenses(): LiveData<List<Expense>>
 
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM expense")
+    fun getTotalExpenses(): LiveData<Double>
+
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM expense WHERE category = :categoryName")
+    fun getTotalExpensesForCategory(categoryName: String): LiveData<Double>
+
 
 
     @Query("DELETE FROM expense")

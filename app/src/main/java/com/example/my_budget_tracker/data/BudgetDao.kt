@@ -1,43 +1,52 @@
 package com.example.my_budget_tracker.data
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.OnConflictStrategy
-import androidx.room.Update
-
+import androidx.room.*
 
 @Dao
 interface BudgetDao {
-    // For the overall budget
+
+    // Insert or update the overall budget
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBudget(budget: Budget)
+    suspend fun insertOrUpdateBudget(budget: Budget)
 
     @Query("SELECT * FROM budget LIMIT 1")
-    suspend fun getBudget(): Budget?
+    fun getBudget(): LiveData<Budget?>
 
-    @Update
-    suspend fun updateBudget(budget: Budget)
+    @Query("UPDATE budget SET remainingBudget = :remainingBudget WHERE id = 1")
+    suspend fun updateRemainingBudget(remainingBudget: Double)
 
-    // For category-specific budgets
+    // Insert or update a category-specific budget
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCategoryBudget(categoryBudget: CategoryBudget)
+    suspend fun insertOrUpdateCategoryBudget(categoryBudget: CategoryBudget)
 
     @Query("SELECT * FROM category_budget WHERE categoryName = :category")
-    suspend fun getCategoryBudget(category: String): CategoryBudget?
+    fun getCategoryBudget(category: String): LiveData<CategoryBudget?>
 
+    // Get all category budgets as LiveData for observing changes in the RecyclerView
     @Query("SELECT * FROM category_budget")
-    suspend fun getAllCategoryBudgets(): List<CategoryBudget>
+    fun getAllCategoryBudgets(): LiveData<List<CategoryBudget>>
 
-    @Update
-    suspend fun updateCategoryBudget(categoryBudget: CategoryBudget)
-
-    @Query("SELECT SUM(amount) FROM expense")
+    // Get total expenses as LiveData
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM expense")
     fun getTotalExpenses(): LiveData<Double>
 
-    @Query("SELECT (SELECT amount FROM budget LIMIT 1) - (SELECT SUM(amount) FROM expense)")
+    // Calculate remaining budget as LiveData
+    @Query("SELECT (SELECT COALESCE(overallBudget, 0.0) FROM budget LIMIT 1) - (SELECT COALESCE(SUM(amount), 0.0) FROM expense)")
     fun getRemainingBudget(): LiveData<Double>
 
-}
+    // Reset the overall budget to zero
+    @Query("UPDATE budget SET overallBudget = 0.0 WHERE id = (SELECT id FROM budget LIMIT 1)")
+    suspend fun resetOverallBudget()
 
+    @Query("DELETE FROM budget")
+    suspend fun deleteAllBudgets()
+
+    // Delete all category-specific budgets
+    @Query("DELETE FROM category_budget")
+    suspend fun deleteAllCategoryBudgets()
+
+    @Query("UPDATE category_budget SET remainingAmount = :remainingBudget WHERE categoryName = :categoryName")
+    suspend fun updateCategoryRemainingBudget(categoryName: String, remainingBudget: Double)
+
+}
