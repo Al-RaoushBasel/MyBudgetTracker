@@ -44,6 +44,10 @@ class BudgetFragment : Fragment() {
             if (overallBudget != null) {
                 saveOverallBudget(overallBudget)
                 Snackbar.make(view, "Overall Budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+
+                // Clear the input field after saving
+                binding.overallBudgetInput.text?.clear()
+
                 updateSummary()
             } else {
                 Snackbar.make(view, "Please enter a valid budget amount", Snackbar.LENGTH_SHORT).show()
@@ -57,6 +61,10 @@ class BudgetFragment : Fragment() {
             if (budgetAmount != null) {
                 saveCategoryBudget(category, budgetAmount)
                 Snackbar.make(view, "$category budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+
+                // Clear the input field after saving
+                binding.categoryBudgetInput.text?.clear()
+
                 updateSummary()
             } else {
                 Snackbar.make(view, "Please enter a valid amount", Snackbar.LENGTH_SHORT).show()
@@ -67,7 +75,6 @@ class BudgetFragment : Fragment() {
         updateSummary()
 
         setupClickListeners(view)
-
     }
 
     private fun setupClickListeners(view: View) {
@@ -76,6 +83,9 @@ class BudgetFragment : Fragment() {
             if (overallBudget != null) {
                 saveOverallBudget(overallBudget)
                 Snackbar.make(view, "Overall Budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+
+                // Clear the input field after saving
+                binding.overallBudgetInput.text?.clear()
             } else {
                 Snackbar.make(view, "Please enter a valid budget amount", Snackbar.LENGTH_SHORT).show()
             }
@@ -87,6 +97,9 @@ class BudgetFragment : Fragment() {
             if (budgetAmount != null) {
                 saveCategoryBudget(category, budgetAmount)
                 Snackbar.make(view, "$category budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+
+                // Clear the input field after saving
+                binding.categoryBudgetInput.text?.clear()
             } else {
                 Snackbar.make(view, "Please enter a valid amount", Snackbar.LENGTH_SHORT).show()
             }

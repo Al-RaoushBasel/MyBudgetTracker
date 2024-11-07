@@ -7,8 +7,8 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.my_budget_tracker.R
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModel
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModelFactory
+import com.example.my_budget_tracker.viewModel.ExpenseViewModel
+import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
 

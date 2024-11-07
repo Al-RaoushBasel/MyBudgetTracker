@@ -1,4 +1,4 @@
-package com.example.my_budget_tracker.ViewModel
+package com.example.my_budget_tracker.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

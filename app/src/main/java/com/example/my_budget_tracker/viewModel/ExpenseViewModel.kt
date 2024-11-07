@@ -1,8 +1,7 @@
-package com.example.my_budget_tracker.ViewModel
+package com.example.my_budget_tracker.viewModel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.example.my_budget_tracker.data.Expense

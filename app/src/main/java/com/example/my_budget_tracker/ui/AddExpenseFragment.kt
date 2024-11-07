@@ -12,13 +12,14 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.my_budget_tracker.R
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModel
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModelFactory
+import com.example.my_budget_tracker.viewModel.ExpenseViewModel
+import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import com.example.my_budget_tracker.data.Expense
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
 import java.util.Date
 
+@Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
 class AddExpenseFragment : Fragment() {
 
     // Category icon map to link categories to drawable resources
