@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import com.example.my_budget_tracker.R
 import com.example.my_budget_tracker.data.Budget
@@ -15,6 +16,7 @@ import com.example.my_budget_tracker.databinding.FragmentBudgetBinding
 import com.example.my_budget_tracker.viewmodel.BudgetViewModel
 import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class BudgetFragment : Fragment() {
 
@@ -116,9 +118,25 @@ class BudgetFragment : Fragment() {
     }
 
     private fun saveCategoryBudget(categoryName: String, budgetAmount: Double) {
-        val categoryBudget = CategoryBudget(categoryName = categoryName, budgetAmount = budgetAmount)
-        budgetViewModel.insertOrUpdateCategoryBudget(categoryBudget)
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Check if a budget already exists for this category
+            val existingCategoryBudget = budgetViewModel.getCategoryBudgetByName(categoryName)
+
+            if (existingCategoryBudget != null) {
+                // If a budget exists, update the existing budget
+                val updatedCategoryBudget = existingCategoryBudget.copy(budgetAmount = budgetAmount)
+                budgetViewModel.updateCategoryBudget(updatedCategoryBudget)
+                Snackbar.make(requireView(), "$categoryName budget updated successfully!", Snackbar.LENGTH_SHORT).show()
+            } else {
+                // If no budget exists, insert a new one
+                val newCategoryBudget = CategoryBudget(categoryName = categoryName, budgetAmount = budgetAmount)
+                budgetViewModel.insertCategoryBudget(newCategoryBudget)
+                Snackbar.make(requireView(), "$categoryName budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+            }
+            updateSummary() // Refresh the summary after updating or inserting
+        }
     }
+
 
     private fun updateSummary() {
         // Revert to observing LiveData directly within the fragment as in the original code

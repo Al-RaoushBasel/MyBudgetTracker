@@ -49,4 +49,14 @@ interface BudgetDao {
     @Query("UPDATE category_budget SET remainingAmount = :remainingBudget WHERE categoryName = :categoryName")
     suspend fun updateCategoryRemainingBudget(categoryName: String, remainingBudget: Double)
 
+
+    @Query("SELECT * FROM category_budget WHERE categoryName = :categoryName LIMIT 1")
+    suspend fun getCategoryBudgetByName(categoryName: String): CategoryBudget?
+
+    @Update
+    suspend fun updateCategoryBudget(categoryBudget: CategoryBudget)
+
+    @Insert
+    suspend fun insertCategoryBudget(categoryBudget: CategoryBudget)
+
 }

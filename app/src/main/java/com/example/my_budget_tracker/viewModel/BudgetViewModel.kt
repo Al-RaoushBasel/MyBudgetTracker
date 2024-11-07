@@ -85,4 +85,21 @@ class BudgetViewModel(
             budgetDao.updateRemainingBudget(remainingBudget)
         }
     }
+
+
+    suspend fun getCategoryBudgetByName(categoryName: String): CategoryBudget? {
+        return budgetDao.getCategoryBudgetByName(categoryName)
+    }
+
+    fun updateCategoryBudget(categoryBudget: CategoryBudget) {
+        viewModelScope.launch {
+            budgetDao.updateCategoryBudget(categoryBudget)
+        }
+    }
+
+    fun insertCategoryBudget(categoryBudget: CategoryBudget) {
+        viewModelScope.launch {
+            budgetDao.insertCategoryBudget(categoryBudget)
+        }
+    }
 }
