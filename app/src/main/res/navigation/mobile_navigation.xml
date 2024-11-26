@@ -1,7 +1,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    app:startDestination="@id/navigation_records">
+    app:startDestination="@id/navigation_analysis">
 
     <!-- Existing Fragments -->
     <fragment
@@ -20,7 +20,7 @@
         android:id="@+id/navigation_budget"
         android:name="com.example.my_budget_tracker.ui.BudgetFragment"
         android:label="Budget"
-        tools:layout="@layout/fragment_budget" >
+        tools:layout="@layout/fragment_budget">
 
         <!-- Action to navigate to AnalysisDetailFragment -->
         <action
