@@ -11,6 +11,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.example.my_budget_tracker.R
 import com.example.my_budget_tracker.data.Budget
 import com.example.my_budget_tracker.data.CategoryBudget
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.databinding.FragmentBudgetBinding
 import com.example.my_budget_tracker.viewmodel.BudgetViewModel
@@ -142,15 +143,15 @@ class BudgetFragment : Fragment() {
         // Revert to observing LiveData directly within the fragment as in the original code
         budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
             val totalBudget = budget?.overallBudget ?: 0.0
-            binding.totalBudgetSummary.text = "Total Budget: $$totalBudget"
+            binding.totalBudgetSummary.text = "Total Budget: ${CurrencyManager.formatAmount(totalBudget)}"
 
             budgetViewModel.totalExpenses.observe(viewLifecycleOwner) { totalExpenses ->
                 val expenses = totalExpenses ?: 0.0
-                binding.totalExpensesSummary.text = "Total Expenses: $$expenses"
+                binding.totalExpensesSummary.text = "Total Expenses: ${CurrencyManager.formatAmount(expenses)}"
 
                 // Calculate the remaining budget
                 val remainingBudget = totalBudget - expenses
-                binding.remainingBudgetSummary.text = "Remaining Budget: $$remainingBudget"
+                binding.remainingBudgetSummary.text = "Remaining Budget: ${CurrencyManager.formatAmount(remainingBudget)}"
             }
         }
     }

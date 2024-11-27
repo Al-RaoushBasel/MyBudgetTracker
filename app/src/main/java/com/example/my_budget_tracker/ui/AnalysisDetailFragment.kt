@@ -12,6 +12,7 @@ import com.example.my_budget_tracker.R
 import com.example.my_budget_tracker.viewmodel.BudgetViewModel
 import com.example.my_budget_tracker.data.Budget
 import com.example.my_budget_tracker.data.CategoryBudget
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.databinding.FragmentAnalysisDetailBinding
 import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
@@ -117,13 +118,15 @@ class AnalysisDetailFragment : Fragment() {
             if (totalBudget > 0) {
                 val progress = (expenses / totalBudget * 100).toInt()
                 binding.overallBudgetProgress.progress = progress
-                binding.overallBudgetSummaryText.text = "Used: $$expenses of $$totalBudget"
+                binding.overallBudgetSummaryText.text =
+                    "Used: ${CurrencyManager.formatAmount(expenses)} of ${CurrencyManager.formatAmount(totalBudget)}"
             } else {
                 binding.overallBudgetProgress.progress = 0
                 binding.overallBudgetSummaryText.text = "No budget set"
             }
         }
     }
+
 
     private fun updateCategoryBudgetUI(categoryBudgets: List<CategoryBudget>) {
         categoryBudgets.forEach { categoryBudget ->

@@ -176,7 +176,7 @@
                     android:id="@+id/total_budget_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total Budget: $0.00"
+                    android:text="Total Budget: 0.00"
                     android:textSize="16sp"
                     android:textColor="@color/green" />
 
@@ -184,7 +184,7 @@
                     android:id="@+id/total_expenses_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total Expenses: $0.00"
+                    android:text="Total Expenses: 0.00"
                     android:textSize="16sp"
                     android:textColor="@color/red" />
 
@@ -192,7 +192,7 @@
                     android:id="@+id/remaining_budget_summary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Remaining Budget: $0.00"
+                    android:text="Remaining Budget: 0.00"
                     android:textSize="16sp"
                     android:textColor="@color/text_secondary" />
             </LinearLayout>

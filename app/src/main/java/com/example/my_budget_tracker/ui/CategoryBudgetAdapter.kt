@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.my_budget_tracker.data.CategoryBudget
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.databinding.ItemCategoryBudgetBinding
 
 class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.CategoryBudgetViewHolder>(DIFF_CALLBACK) {
@@ -35,18 +36,23 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
     inner class CategoryBudgetViewHolder(private val binding: ItemCategoryBudgetBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(categoryBudget: CategoryBudget) {
             binding.categoryName.text = categoryBudget.categoryName
-            binding.budgetAmount.text = "Budget Amount: $${categoryBudget.budgetAmount}"
 
-            // Initialize progress and remaining budget details
+            // Dynamically format amounts using CurrencyManager
+            binding.budgetAmount.text = "Budget Amount: ${CurrencyManager.formatAmount(categoryBudget.budgetAmount)}"
+
             val remainingBudget = categoryBudget.remainingAmount
             val expenses = categoryBudget.budgetAmount - remainingBudget
+
+            // Format and display dynamically
+            binding.categoryBudgetDetails.text = "Used ${CurrencyManager.formatAmount(expenses)} out of ${CurrencyManager.formatAmount(categoryBudget.budgetAmount)}"
+
+            // Calculate and set progress
             val progress = if (categoryBudget.budgetAmount > 0) {
                 (expenses / categoryBudget.budgetAmount * 100).toInt()
             } else {
                 0
             }
             binding.categoryBudgetProgress.progress = progress
-            binding.categoryBudgetDetails.text = "Used $$expenses out of $${categoryBudget.budgetAmount}"
         }
 
         // Additional method to update progress dynamically
@@ -57,7 +63,7 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
                 0
             }
             binding.categoryBudgetProgress.progress = progress
-            binding.categoryBudgetDetails.text = "Used $$expenses out of $$totalBudget"
+            binding.categoryBudgetDetails.text = "Used ${CurrencyManager.formatAmount(expenses)} out of ${CurrencyManager.formatAmount(totalBudget)}"
         }
     }
 

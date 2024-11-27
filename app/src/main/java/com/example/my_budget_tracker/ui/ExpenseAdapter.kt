@@ -1,5 +1,6 @@
 package com.example.my_budget_tracker.ui
 
+import com.example.my_budget_tracker.data.CurrencyManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,7 +28,7 @@ class ExpenseAdapter(private var expenses: List<Expense>) : RecyclerView.Adapter
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenses[position]
         holder.nameTextView.text = expense.name
-        holder.amountTextView.text = "$${expense.amount}"
+        holder.amountTextView.text = CurrencyManager.formatAmount(expense.amount) // Use CurrencyManager
         holder.iconImageView.setImageResource(expense.icon)
         holder.dateTextView.text = java.text.SimpleDateFormat("dd/MM/yyyy").format(expense.date)
     }

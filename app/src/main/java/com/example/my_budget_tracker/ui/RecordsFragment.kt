@@ -2,19 +2,23 @@ package com.example.my_budget_tracker.ui
 
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.my_budget_tracker.R
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.viewModel.ExpenseViewModel
 import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
+import kotlinx.coroutines.launch
 
 class RecordsFragment : Fragment() {
 
-    private val expenseViewModel: ExpenseViewModel by viewModels {
+     val expenseViewModel: ExpenseViewModel by viewModels {
         val repository = ExpenseRepository(
             expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
         )
@@ -35,6 +39,18 @@ class RecordsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_records, container, false)
         expenseRecyclerView = view.findViewById(R.id.expense_recycler_view)
         expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        // Fetch exchange rates and update UI when the fragment is created
+        lifecycleScope.launch {
+            try {
+                CurrencyManager.fetchExchangeRates()
+                CurrencyManager.setCurrency("HUF") // Set desired currency
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error fetching rates: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
 
         // Observe expenses from ViewModel
         expenseViewModel.allExpenses.observe(viewLifecycleOwner) { expenses ->
@@ -71,5 +87,4 @@ class RecordsFragment : Fragment() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
 }

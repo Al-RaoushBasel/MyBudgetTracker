@@ -40,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:text="Total Spending: $0.00"
+            android:text="Total Spending: 0.00"
             android:textSize="16sp"
             android:textColor="@android:color/black" />
     </com.google.android.material.card.MaterialCardView>
@@ -79,7 +79,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:text="Average Daily Spending: $"
+            android:text="Average Daily Spending: "
             android:textSize="16sp"
             android:textColor="@android:color/black" />
     </com.google.android.material.card.MaterialCardView>

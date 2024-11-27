@@ -40,7 +40,7 @@
             android:id="@+id/category_budget_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Used $0 out of $0"
+            android:text="Used 0 out of 0"
             android:textSize="14sp"
             android:paddingTop="4dp"
             android:textColor="@color/text_secondary" />
@@ -50,7 +50,7 @@
             android:id="@+id/budget_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Budget Amount: $0.00"
+            android:text="Budget Amount: 0.00"
             android:textSize="14sp"
             android:paddingTop="4dp"
             android:textColor="@color/text_secondary" />
