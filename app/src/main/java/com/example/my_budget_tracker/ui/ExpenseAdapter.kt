@@ -27,11 +27,18 @@ class ExpenseAdapter(private var expenses: List<Expense>) : RecyclerView.Adapter
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenses[position]
+        val convertedAmount = CurrencyManager.convertAmount(
+            expense.amount, // Stored in EUR
+            "EUR", // Base currency
+            CurrencyManager.selectedCurrency // Convert to selected currency
+        )
+        holder.amountTextView.text = CurrencyManager.formatAmount(convertedAmount)
         holder.nameTextView.text = expense.name
-        holder.amountTextView.text = CurrencyManager.formatAmount(expense.amount) // Use CurrencyManager
         holder.iconImageView.setImageResource(expense.icon)
         holder.dateTextView.text = java.text.SimpleDateFormat("dd/MM/yyyy").format(expense.date)
     }
+
+
 
     override fun getItemCount() = expenses.size
 
@@ -43,7 +50,13 @@ class ExpenseAdapter(private var expenses: List<Expense>) : RecyclerView.Adapter
 
     // Sort by amount
     fun sortByAmount() {
-        expenses = expenses.sortedBy { it.amount }
+        expenses = expenses.sortedBy { expense ->
+            CurrencyManager.convertAmount(
+                expense.amount,
+                expense.currency,
+                CurrencyManager.selectedCurrency
+            )
+        }
         notifyDataSetChanged()
     }
 
@@ -53,4 +66,9 @@ class ExpenseAdapter(private var expenses: List<Expense>) : RecyclerView.Adapter
         notifyDataSetChanged()
     }
 
+    // Update expenses and handle currency conversions
+    fun updateExpenses(newExpenses: List<Expense>) {
+        this.expenses = newExpenses
+        notifyDataSetChanged()
+    }
 }

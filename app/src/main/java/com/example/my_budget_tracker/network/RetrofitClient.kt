@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
     private const val BASE_URL = "https://api.exchangeratesapi.io/v1/" // Use HTTP as per documentation
-    private const val API_KEY = "9452757950ecb43d5cae412f5ee3fcfb"
+    private const val API_KEY = "351f29810ea92090c3e63c4657c0cf7e"
 
     private val client = OkHttpClient.Builder()
         .addInterceptor { chain ->

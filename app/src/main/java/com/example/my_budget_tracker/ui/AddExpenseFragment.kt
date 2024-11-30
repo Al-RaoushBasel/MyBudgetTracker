@@ -12,12 +12,16 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.my_budget_tracker.R
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.viewModel.ExpenseViewModel
 import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import com.example.my_budget_tracker.data.Expense
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
 import java.util.Date
+import com.example.my_budget_tracker.viewmodel.BudgetViewModel
+import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
+
 
 @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
 class AddExpenseFragment : Fragment() {
@@ -36,6 +40,14 @@ class AddExpenseFragment : Fragment() {
     private val expenseViewModel: ExpenseViewModel by viewModels {
         val repository = ExpenseRepository(ExpenseDatabase.getDatabase(requireContext()).expenseDao())
         ExpenseViewModelFactory(repository)
+    }
+
+    // Initialize budgetViewModel using a factory
+    private val budgetViewModel: BudgetViewModel by viewModels {
+        val application = requireActivity().application // Get the application context
+        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
+        val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
+        BudgetViewModelFactory(application, budgetDao, expenseDao)
     }
 
 
@@ -62,7 +74,6 @@ class AddExpenseFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        //inflater.inflate(R.menu.menu_back, menu) // Ensure you have a menu with a back button if needed
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -89,24 +100,42 @@ class AddExpenseFragment : Fragment() {
 
         addButton.setOnClickListener {
             val name = categorySpinner.selectedItem.toString()
-            val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val amountInput = amountEditText.text.toString().toDoubleOrNull()
 
-            if (name.isNotEmpty() && amount > 0) {
-                // Get the appropriate icon based on category, or use default icon if not found
+            if (name.isNotEmpty() && amountInput != null && amountInput > 0) {
                 val iconResId = categoryIconMap[name] ?: R.drawable.ic_categories
 
-                // Create an Expense object and insert it
+                // Convert entered amount to EUR before storing
+                val amountInEUR = CurrencyManager.convertAmount(
+                    amountInput,
+                    CurrencyManager.selectedCurrency, // Current selected currency
+                    "EUR" // Convert to base currency
+                )
+
                 val expense = Expense(
                     name = name,
-                    amount = amount,
+                    amount = amountInEUR, // Store in EUR
                     icon = iconResId,
                     date = Date(),
-                    category = name// or System.currentTimeMillis() if using timestamp
+                    category = name,
+                    currency = "EUR" // Indicate that the amount is in EUR
                 )
                 expenseViewModel.insertExpense(expense)
-
-                // Show success message
+                amountEditText.text.clear()
                 successMessageLayout.visibility = View.VISIBLE
+                successMessageLayout.postDelayed({
+                    successMessageLayout.visibility = View.GONE
+                }, 2000)
+
+                // Check if the budget has been exceeded
+                budgetViewModel.checkBudgetExceeded()
+                // log checkBudgetExceeded() call
+
+
+
+                // Show a toast message
+                Toast.makeText(context, "Expense added successfully!", Toast.LENGTH_SHORT).show()
+
             } else {
                 Toast.makeText(context, "Please enter a valid amount.", Toast.LENGTH_SHORT).show()
             }

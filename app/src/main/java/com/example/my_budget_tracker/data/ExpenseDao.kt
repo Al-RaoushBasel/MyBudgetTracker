@@ -23,10 +23,14 @@ interface ExpenseDao {
     @Query("SELECT COALESCE(SUM(amount), 0.0) FROM expense WHERE category = :categoryName")
     fun getTotalExpensesForCategory(categoryName: String): LiveData<Double>
 
-
+    @Query("SELECT * FROM expense")
+    suspend fun getAllExpensesValue(): List<Expense> // Add this method
 
     @Query("DELETE FROM expense")
     suspend fun deleteAllExpenses()
+
+    @Query("SELECT SUM(amount) FROM expense")
+    suspend fun getTotalExpensesDirectly(): Double?
 
     companion object
 }

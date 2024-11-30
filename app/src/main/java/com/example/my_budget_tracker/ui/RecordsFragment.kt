@@ -1,5 +1,6 @@
 package com.example.my_budget_tracker.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 class RecordsFragment : Fragment() {
 
-     val expenseViewModel: ExpenseViewModel by viewModels {
+    val expenseViewModel: ExpenseViewModel by viewModels {
         val repository = ExpenseRepository(
             expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
         )
@@ -40,22 +41,38 @@ class RecordsFragment : Fragment() {
         expenseRecyclerView = view.findViewById(R.id.expense_recycler_view)
         expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Fetch exchange rates and update UI when the fragment is created
+        // Initialize ExpenseAdapter once with an empty list
+        expenseAdapter = ExpenseAdapter(emptyList())
+        expenseRecyclerView.adapter = expenseAdapter
+
+        // Initialize CurrencyManager if not already done
+        CurrencyManager.initialize(requireContext())
+
+        // Fetch exchange rates only if necessary
         lifecycleScope.launch {
             try {
                 CurrencyManager.fetchExchangeRates()
-                CurrencyManager.setCurrency("HUF") // Set desired currency
+                //println("Fetched exchange rates: ${CurrencyManager.rates}")
             } catch (e: Exception) {
                 Toast.makeText(context, "Error fetching rates: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
-
-
         // Observe expenses from ViewModel
         expenseViewModel.allExpenses.observe(viewLifecycleOwner) { expenses ->
-            expenseAdapter = ExpenseAdapter(expenses)
-            expenseRecyclerView.adapter = expenseAdapter
+            val convertedExpenses = expenses.map { expense ->
+                val convertedAmount = CurrencyManager.convertAmount(
+                    expense.amount,
+                    "EUR", // Stored in EUR
+                    CurrencyManager.selectedCurrency // Convert to selected currency
+                )
+                println("Converting ${expense.amount} EUR to ${CurrencyManager.selectedCurrency}: $convertedAmount")
+                expense.copy(
+                    amount = convertedAmount,
+                    currency = CurrencyManager.selectedCurrency // Update displayed currency
+                )
+            }
+            expenseAdapter.updateExpenses(convertedExpenses)
         }
 
         return view
@@ -68,7 +85,6 @@ class RecordsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_clear_all -> {
-                // Call ViewModel's method to clear all expenses
                 expenseViewModel.deleteAllExpenses()
                 true
             }
@@ -84,7 +100,67 @@ class RecordsFragment : Fragment() {
                 expenseAdapter.sortByCategory()
                 true
             }
+            R.id.action_switch_currency -> {
+                showCurrencySwitchDialog()
+                true
+            }
+            R.id.action_refresh_rates -> {
+                refreshExchangeRates()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    // Show a dialog to switch currencies
+    private fun showCurrencySwitchDialog() {
+        val currencies = arrayOf("EUR", "USD")
+        var selectedCurrency = CurrencyManager.selectedCurrency
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Select Currency")
+            .setSingleChoiceItems(currencies, currencies.indexOf(selectedCurrency)) { _, which ->
+                selectedCurrency = currencies[which]
+            }
+            .setPositiveButton("OK") { _, _ ->
+                if (selectedCurrency != CurrencyManager.selectedCurrency) {
+                    CurrencyManager.setCurrency(selectedCurrency)
+                    Toast.makeText(context, "Currency switched to $selectedCurrency", Toast.LENGTH_SHORT).show()
+                    updateRecyclerView()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    // Refresh exchange rates
+    private fun refreshExchangeRates() {
+        lifecycleScope.launch {
+            try {
+                CurrencyManager.fetchExchangeRates(true)
+                Toast.makeText(context, "Exchange rates refreshed", Toast.LENGTH_SHORT).show()
+                updateRecyclerView()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error refreshing rates: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Update the RecyclerView to reflect new currency or rates
+    private fun updateRecyclerView() {
+        val expenses = expenseViewModel.allExpenses.value ?: emptyList()
+        val convertedExpenses = expenses.map { expense ->
+            val convertedAmount = CurrencyManager.convertAmount(
+                expense.amount, // Stored in EUR
+                "EUR", // Base currency
+                CurrencyManager.selectedCurrency // Convert to selected currency
+            )
+            println("Converting ${expense.amount} EUR to ${CurrencyManager.selectedCurrency}: $convertedAmount")
+            expense.copy(
+                amount = convertedAmount,
+                currency = CurrencyManager.selectedCurrency // Update displayed currency
+            )
+        }
+        expenseAdapter.updateExpenses(convertedExpenses)
     }
 }

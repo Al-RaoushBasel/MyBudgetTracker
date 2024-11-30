@@ -59,4 +59,7 @@ interface BudgetDao {
     @Insert
     suspend fun insertCategoryBudget(categoryBudget: CategoryBudget)
 
+    @Query("SELECT * FROM budget LIMIT 1")
+    suspend fun getBudgetDirectly(): Budget?
+
 }

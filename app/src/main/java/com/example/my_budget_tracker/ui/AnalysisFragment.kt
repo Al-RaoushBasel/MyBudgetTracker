@@ -56,19 +56,32 @@ class AnalysisFragment : Fragment() {
     }
 
     private fun updateChartWithExpenses(expenses: List<Expense>, pieChart: PieChart) {
+        // Group expenses by category and calculate totals
         val categoryTotals = expenses.groupBy { it.name }
-            .mapValues { entry -> entry.value.sumOf { it.amount } }
+            .mapValues { entry ->
+                // Convert each expense amount to the selected currency before summing
+                entry.value.sumOf { expense ->
+                    CurrencyManager.convertAmount(
+                        expense.amount, // Amount in EUR
+                        "EUR", // Stored in EUR
+                        CurrencyManager.selectedCurrency // Convert to selected currency
+                    )
+                }
+            }
 
+        // Create PieEntries for the chart
         val entries = categoryTotals.map { (category, total) ->
             PieEntry(total.toFloat(), category) // Only category name as label
         }
 
+        // Define colors for the chart
         val colors = listOf(
             Color.RED, Color.BLUE, Color.GREEN, Color.MAGENTA, Color.YELLOW,
             Color.CYAN, Color.parseColor("#FFA500"), Color.LTGRAY, Color.DKGRAY,
             Color.parseColor("#FF5733")
         )
 
+        // Set up the PieDataSet with the entries
         val dataSet = PieDataSet(entries, "Categories")
         dataSet.colors = colors
         dataSet.valueTextColor = Color.WHITE
@@ -76,10 +89,12 @@ class AnalysisFragment : Fragment() {
         dataSet.sliceSpace = 2f
         dataSet.selectionShift = 5f
 
+        // Set up the PieData
         val pieData = PieData(dataSet)
         pieChart.data = pieData
         pieChart.invalidate()
 
+        // Chart appearance settings
         pieChart.description.isEnabled = false
         pieChart.centerText = "Expense Analysis"
         pieChart.setCenterTextSize(20f)
@@ -115,6 +130,7 @@ class AnalysisFragment : Fragment() {
 
 
 
+
     private fun updateStatistics(expenses: List<Expense>) {
         if (expenses.isEmpty()) {
             binding.totalSpending.text = "Total Spending: ${CurrencyManager.formatAmount(0.0)}"
@@ -124,8 +140,19 @@ class AnalysisFragment : Fragment() {
             return
         }
 
-        val totalSpending = expenses.sumOf { it.amount }
-        val highestCategory = expenses.groupBy { it.name }
+        // Convert amounts to the selected currency
+        val convertedExpenses = expenses.map { expense ->
+            expense.copy(
+                amount = CurrencyManager.convertAmount(
+                    expense.amount, // Amount in EUR
+                    "EUR", // Stored in EUR
+                    CurrencyManager.selectedCurrency // Convert to selected currency
+                )
+            )
+        }
+
+        val totalSpending = convertedExpenses.sumOf { it.amount }
+        val highestCategory = convertedExpenses.groupBy { it.name }
             .maxByOrNull { it.value.sumOf { expense -> expense.amount } }?.key ?: "N/A"
 
         val calendar = java.util.Calendar.getInstance()
@@ -137,7 +164,7 @@ class AnalysisFragment : Fragment() {
         binding.highestExpenseCategory.text = "Highest Expense Category: $highestCategory"
         binding.averageDailySpending.text = "Average Daily Spending: ${CurrencyManager.formatAmount(avgDailySpending)}"
 
-        val comparison = compareSpending(expenses, "Food", "Shopping")
+        val comparison = compareSpending(convertedExpenses, "Food", "Shopping")
         binding.expenseComparison.text = "Comparison (Food vs Shopping): $comparison"
     }
 
@@ -150,6 +177,8 @@ class AnalysisFragment : Fragment() {
             else -> "Equal spending (${CurrencyManager.formatAmount(category1Total)})"
         }
     }
+
+
 
     private var isHighlighted = false // Tracks if the highest expense is currently highlighted
 

@@ -1,5 +1,9 @@
 package com.example.my_budget_tracker.viewmodel
 
+import android.app.Application
+import android.content.Intent
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,12 +11,14 @@ import com.example.my_budget_tracker.data.Budget
 import com.example.my_budget_tracker.data.BudgetDao
 import com.example.my_budget_tracker.data.CategoryBudget
 import com.example.my_budget_tracker.data.ExpenseDao
+import com.example.my_budget_tracker.receiver.BudgetExceededReceiver
 import kotlinx.coroutines.launch
 
 class BudgetViewModel(
+    application: Application, // Add this parameter
     private val budgetDao: BudgetDao,
     private val expenseDao: ExpenseDao
-) : ViewModel() {
+) : AndroidViewModel(application) { // Extend AndroidViewModel
 
     // LiveData to observe budget data
     val budget: LiveData<Budget?> = budgetDao.getBudget()
@@ -102,4 +108,36 @@ class BudgetViewModel(
             budgetDao.insertCategoryBudget(categoryBudget)
         }
     }
+
+
+    fun checkBudgetExceeded() = viewModelScope.launch {
+        println("checkBudgetExceeded() called")
+
+        val budget = budgetDao.getBudgetDirectly()
+        val totalExpenses = expenseDao.getTotalExpensesDirectly() ?: 0.0
+
+        if (budget == null) {
+            println("No budget found. Cannot check budget exceeded.")
+            return@launch
+        }
+
+        println("Total Expenses: $totalExpenses, Overall Budget: ${budget.overallBudget}")
+
+        if (totalExpenses > budget.overallBudget) {
+            println("Budget exceeded! Sending broadcast.")
+
+            val context = getApplication<Application>().applicationContext
+            val intent = Intent(context, BudgetExceededReceiver::class.java) // Explicit intent
+            intent.action = "com.example.my_budget_tracker.BUDGET_EXCEEDED"
+            context.sendBroadcast(intent)
+        } else {
+            println("Budget not exceeded.")
+        }
+    }
+
+
+
+
+
+
 }

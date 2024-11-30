@@ -18,6 +18,8 @@
     <color name="colorPrimary">#6200EE</color> <!-- Example color (Deep Purple) -->
     <color name="colorPrimaryDark">#3700B3</color> <!-- Darker shade for status bar, etc. -->
     <color name="progress_background">#D3D3D3</color> <!-- Light gray color -->
+    <color name="fillColor">#D3D3D3</color> <!-- Light gray color -->
+
 
 
 

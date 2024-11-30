@@ -15,8 +15,9 @@ import com.example.my_budget_tracker.data.CategoryBudget
 import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.databinding.FragmentAnalysisDetailBinding
-import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
 import com.google.android.material.snackbar.Snackbar
+import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
+
 
 class AnalysisDetailFragment : Fragment() {
 
@@ -50,26 +51,27 @@ class AnalysisDetailFragment : Fragment() {
         })
 
         // Initialize the ViewModel with the factory
+// Initialize the ViewModel with the factory
         val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
         val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
-        val factory = BudgetViewModelFactory(budgetDao, expenseDao)
+        val factory = BudgetViewModelFactory(
+            requireActivity().application, // Pass the Application instance
+            budgetDao,
+            expenseDao
+        )
         budgetViewModel = ViewModelProvider(this, factory).get(BudgetViewModel::class.java)
+
 
         // Set up the RecyclerView and adapter for category budgets
         adapter = CategoryBudgetAdapter()
         binding.categoryBudgetRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.categoryBudgetRecyclerView.adapter = adapter
 
-        // Observe and update the overall budget progress separately
-        budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
-            updateOverallBudgetUI(budget)
-        }
+        // Observe and update the overall budget progress
+        observeOverallBudget()
 
-        // Observe and update each category budget in the RecyclerView
-        budgetViewModel.categoryBudgets().observe(viewLifecycleOwner) { categoryBudgets ->
-            adapter.submitList(categoryBudgets)
-            updateCategoryBudgetUI(categoryBudgets)
-        }
+        // Fetch and update category budgets with currency handling
+        observeAndUpdateCategoryBudgets()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -88,7 +90,7 @@ class AnalysisDetailFragment : Fragment() {
                 true
             }
             R.id.action_delete_category_budgets -> {
-                deleteCategoryBudgets()
+                deleteAllCategoryBudgets()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -98,62 +100,80 @@ class AnalysisDetailFragment : Fragment() {
     private fun resetOverallBudget() {
         budgetViewModel.resetOverallBudget()
         Snackbar.make(requireView(), "Overall Budget reset to 0", Snackbar.LENGTH_SHORT).show()
-
-        // Re-observe the budget after reset to update the UI
-        budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
-            updateOverallBudgetUI(budget)
-        }
     }
 
-    private fun deleteCategoryBudgets() {
+    private fun deleteAllCategoryBudgets() {
         budgetViewModel.deleteAllCategoryBudgets()
         Snackbar.make(requireView(), "All category budgets deleted", Snackbar.LENGTH_SHORT).show()
     }
 
-    private fun updateOverallBudgetUI(budget: Budget?) {
-        val totalBudget = budget?.overallBudget ?: 0.0
+    private fun observeOverallBudget() {
+        budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
+            val totalBudgetInEUR = budget?.overallBudget ?: 0.0
+            val totalBudgetInSelectedCurrency = CurrencyManager.convertAmount(
+                totalBudgetInEUR,
+                "EUR", // From EUR
+                CurrencyManager.selectedCurrency // To selected currency
+            )
 
-        budgetViewModel.totalExpenses.observe(viewLifecycleOwner) { totalExpenses ->
-            val expenses = totalExpenses ?: 0.0
-            if (totalBudget > 0) {
-                val progress = (expenses / totalBudget * 100).toInt()
-                binding.overallBudgetProgress.progress = progress
-                binding.overallBudgetSummaryText.text =
-                    "Used: ${CurrencyManager.formatAmount(expenses)} of ${CurrencyManager.formatAmount(totalBudget)}"
-            } else {
-                binding.overallBudgetProgress.progress = 0
-                binding.overallBudgetSummaryText.text = "No budget set"
-            }
-        }
-    }
-
-
-    private fun updateCategoryBudgetUI(categoryBudgets: List<CategoryBudget>) {
-        categoryBudgets.forEach { categoryBudget ->
-            budgetViewModel.getCategoryExpenses(categoryBudget.categoryName).observe(viewLifecycleOwner) { totalExpenses ->
-                val expenses = totalExpenses ?: 0.0
-                val remainingBudget = categoryBudget.budgetAmount - expenses
-                val progress = if (categoryBudget.budgetAmount > 0) {
-                    (expenses / categoryBudget.budgetAmount * 100).toInt()
-                } else {
-                    0
-                }
-
-                adapter.updateCategoryProgress(
-                    categoryName = categoryBudget.categoryName,
-                    remainingBudget = remainingBudget,
-                    totalBudget = categoryBudget.budgetAmount,
-                    expenses = expenses,
-                    progress = progress
+            budgetViewModel.totalExpenses.observe(viewLifecycleOwner) { totalExpensesInEUR ->
+                val expensesInSelectedCurrency = CurrencyManager.convertAmount(
+                    totalExpensesInEUR ?: 0.0,
+                    "EUR", // From EUR
+                    CurrencyManager.selectedCurrency // To selected currency
                 )
 
-                // Update the remaining budget in the database if necessary
-                budgetViewModel.updateCategoryRemainingBudget(categoryBudget.categoryName, remainingBudget)
+                if (totalBudgetInSelectedCurrency > 0) {
+                    val progress = (expensesInSelectedCurrency / totalBudgetInSelectedCurrency * 100).toInt()
+                    binding.overallBudgetProgress.progress = progress
+                    binding.overallBudgetSummaryText.text =
+                        "Used: ${CurrencyManager.formatAmount(expensesInSelectedCurrency)} of ${CurrencyManager.formatAmount(totalBudgetInSelectedCurrency)}"
+                } else {
+                    binding.overallBudgetProgress.progress = 0
+                    binding.overallBudgetSummaryText.text = "No budget set"
+                }
             }
         }
     }
 
+    private fun observeAndUpdateCategoryBudgets() {
+        budgetViewModel.categoryBudgets().observe(viewLifecycleOwner) { categoryBudgets ->
+            val updatedCategoryBudgets = mutableListOf<CategoryBudget>()
 
+            categoryBudgets.forEach { categoryBudget ->
+                budgetViewModel.getCategoryExpenses(categoryBudget.categoryName).observe(viewLifecycleOwner) { totalExpensesInEUR ->
+                    val expensesInSelectedCurrency = CurrencyManager.convertAmount(
+                        totalExpensesInEUR ?: 0.0,
+                        "EUR", // From EUR
+                        CurrencyManager.selectedCurrency // To selected currency
+                    )
+                    val budgetAmountInSelectedCurrency = CurrencyManager.convertAmount(
+                        categoryBudget.budgetAmount,
+                        "EUR", // From EUR
+                        CurrencyManager.selectedCurrency // To selected currency
+                    )
+                    val remainingBudgetInSelectedCurrency = budgetAmountInSelectedCurrency - expensesInSelectedCurrency
+                    if (budgetAmountInSelectedCurrency > 0) {
+                        (expensesInSelectedCurrency / budgetAmountInSelectedCurrency * 100).toInt()
+                    } else {
+                        0
+                    }
+
+                    updatedCategoryBudgets.add(
+                        categoryBudget.copy(
+                            budgetAmount = budgetAmountInSelectedCurrency,
+                            remainingAmount = remainingBudgetInSelectedCurrency
+                        )
+                    )
+
+                    // Update adapter after processing all categories
+                    if (updatedCategoryBudgets.size == categoryBudgets.size) {
+                        adapter.submitList(updatedCategoryBudgets)
+                    }
+                }
+            }
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

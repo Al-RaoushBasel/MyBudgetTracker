@@ -1,45 +1,70 @@
 package com.example.my_budget_tracker.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.example.my_budget_tracker.network.RetrofitClient
 
 object CurrencyManager {
     private var rates: Map<String, Double>? = null
-    var selectedCurrency: String = "HUF" // Default currency
-    var conversionRate: Double = 1.0 // Default rate (1 EUR = 1 EUR)
+    var selectedCurrency: String = "EUR"
+    var conversionRate: Double = 1.0
+    private lateinit var sharedPreferences: SharedPreferences
 
-    // Method to fetch exchange rates
-    suspend fun fetchExchangeRates() {
-        val response = RetrofitClient.instance.getExchangeRates(
-            accessKey = "9452757950ecb43d5cae412f5ee3fcfb",
-            base = "EUR",
-            symbols = "USD,GBP,HUF"
-        )
-        rates = response.rates
+    // Initialize shared preferences
+    fun initialize(context: Context) {
+        sharedPreferences = context.getSharedPreferences("currency_prefs", Context.MODE_PRIVATE)
+        selectedCurrency = sharedPreferences.getString("selected_currency", "EUR") ?: "EUR"
+    }
+
+    // Fetch exchange rates
+    suspend fun fetchExchangeRates(forceRefresh: Boolean = false) {
+        if (rates == null || forceRefresh) {
+            val response = RetrofitClient.instance.getExchangeRates(
+                accessKey = "351f29810ea92090c3e63c4657c0cf7e",
+                base = "EUR",
+                symbols = "USD,GBP,HUF"
+            )
+            rates = response.rates.toMutableMap().apply {
+                this["EUR"] = 1.0 // Add base currency
+            }
+            println("Fetched Rates: $rates") // Log fetched rates
+        }
     }
 
 
-
-    // Method to set selected currency
+    // Set the selected currency and store it in shared preferences
     fun setCurrency(currency: String) {
-        selectedCurrency = currency
-        conversionRate = rates?.get(currency) ?: 1.0
+        if (rates?.containsKey(currency) == true) {
+            selectedCurrency = currency
+            conversionRate = rates!![currency] ?: 1.0
+            sharedPreferences.edit().putString("selected_currency", currency).apply()
+        }
     }
 
-    // Method to convert and format an amount
+    // Format the amount for display
     fun formatAmount(amount: Double): String {
-        val convertedAmount = amount * conversionRate
-        return "%.2f $selectedCurrency".format(convertedAmount)
+        return "%.2f $selectedCurrency".format(amount)
     }
 
-    // Method to manually convert between currencies
-    fun convert(amount: Double, fromCurrency: String, toCurrency: String): Double {
-        if (rates == null) throw IllegalStateException("Rates not fetched yet")
-        val fromRate = rates!![fromCurrency] ?: throw IllegalArgumentException("Invalid from currency")
-        val toRate = rates!![toCurrency] ?: throw IllegalArgumentException("Invalid to currency")
+    // Convert the amount from one currency to another
+    fun convertAmount(amount: Double, fromCurrency: String, toCurrency: String): Double {
+        if (fromCurrency == toCurrency) {
+            return amount
+        }
+
+        if (rates.isNullOrEmpty() || !rates!!.containsKey(fromCurrency) || !rates!!.containsKey(toCurrency)) {
+            return amount // Fallback to original amount
+        }
+
+        val fromRate = rates!![fromCurrency] ?: 1.0
+        val toRate = rates!![toCurrency] ?: 1.0
+
+        // Debugging: Print rates and conversion values
+        println("Converting $amount from $fromCurrency to $toCurrency")
+        println("From rate: $fromRate, To rate: $toRate")
+
         return amount * (toRate / fromRate)
     }
-
-    fun getRates(): Map<String, Double>? {
-        return rates
-    }
 }
+
+

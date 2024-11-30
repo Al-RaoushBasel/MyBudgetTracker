@@ -27,8 +27,13 @@ class BudgetFragment : Fragment() {
     private val budgetViewModel: BudgetViewModel by viewModels {
         val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
         val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
-        BudgetViewModelFactory(budgetDao, expenseDao)
+        BudgetViewModelFactory(
+            requireActivity().application, // Pass the application instance
+            budgetDao,
+            expenseDao
+        )
     }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -81,80 +86,101 @@ class BudgetFragment : Fragment() {
     }
 
     private fun setupClickListeners(view: View) {
-        binding.saveBudgetButton.setOnClickListener {
-            val overallBudget = binding.overallBudgetInput.text.toString().toDoubleOrNull()
-            if (overallBudget != null) {
-                saveOverallBudget(overallBudget)
-                Snackbar.make(view, "Overall Budget saved successfully!", Snackbar.LENGTH_SHORT).show()
-
-                // Clear the input field after saving
-                binding.overallBudgetInput.text?.clear()
-            } else {
-                Snackbar.make(view, "Please enter a valid budget amount", Snackbar.LENGTH_SHORT).show()
-            }
-        }
-
-        binding.saveCategoryBudgetButton.setOnClickListener {
-            val category = binding.categorySpinner.selectedItem.toString()
-            val budgetAmount = binding.categoryBudgetInput.text.toString().toDoubleOrNull()
-            if (budgetAmount != null) {
-                saveCategoryBudget(category, budgetAmount)
-                Snackbar.make(view, "$category budget saved successfully!", Snackbar.LENGTH_SHORT).show()
-
-                // Clear the input field after saving
-                binding.categoryBudgetInput.text?.clear()
-            } else {
-                Snackbar.make(view, "Please enter a valid amount", Snackbar.LENGTH_SHORT).show()
-            }
-        }
-
         binding.viewAnalysisButton.setOnClickListener {
             NavHostFragment.findNavController(this).navigate(R.id.action_budgetFragment_to_analysisDetailFragment)
         }
     }
 
     private fun saveOverallBudget(overallBudget: Double) {
-        val budget = Budget(overallBudget = overallBudget)
+        // Convert the budget from the selected currency to EUR before saving
+        val budgetInEUR = CurrencyManager.convertAmount(
+            overallBudget,
+            CurrencyManager.selectedCurrency, // From selected currency
+            "EUR" // To EUR
+        )
+
+        val budget = Budget(overallBudget = budgetInEUR)
         budgetViewModel.insertOrUpdateBudget(budget)
+
+        // Show a confirmation message
+        Snackbar.make(
+            requireView(),
+            "Overall budget saved in ${CurrencyManager.selectedCurrency}: ${CurrencyManager.formatAmount(overallBudget)}",
+            Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     private fun saveCategoryBudget(categoryName: String, budgetAmount: Double) {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Check if a budget already exists for this category
-            val existingCategoryBudget = budgetViewModel.getCategoryBudgetByName(categoryName)
+            // Convert the category budget from the selected currency to EUR before saving
+            val budgetAmountInEUR = CurrencyManager.convertAmount(
+                budgetAmount,
+                CurrencyManager.selectedCurrency, // From selected currency
+                "EUR" // To EUR
+            )
 
+            val existingCategoryBudget = budgetViewModel.getCategoryBudgetByName(categoryName)
             if (existingCategoryBudget != null) {
-                // If a budget exists, update the existing budget
-                val updatedCategoryBudget = existingCategoryBudget.copy(budgetAmount = budgetAmount)
+                val updatedCategoryBudget = existingCategoryBudget.copy(budgetAmount = budgetAmountInEUR)
                 budgetViewModel.updateCategoryBudget(updatedCategoryBudget)
-                Snackbar.make(requireView(), "$categoryName budget updated successfully!", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(
+                    requireView(),
+                    "$categoryName budget updated in ${CurrencyManager.selectedCurrency}: ${CurrencyManager.formatAmount(budgetAmount)}",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             } else {
-                // If no budget exists, insert a new one
-                val newCategoryBudget = CategoryBudget(categoryName = categoryName, budgetAmount = budgetAmount)
+                val newCategoryBudget = CategoryBudget(
+                    categoryName = categoryName,
+                    budgetAmount = budgetAmountInEUR
+                )
                 budgetViewModel.insertCategoryBudget(newCategoryBudget)
-                Snackbar.make(requireView(), "$categoryName budget saved successfully!", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(
+                    requireView(),
+                    "$categoryName budget saved in ${CurrencyManager.selectedCurrency}: ${CurrencyManager.formatAmount(budgetAmount)}",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
-            updateSummary() // Refresh the summary after updating or inserting
+
+            // Refresh the summary after saving the budget
+            updateSummary()
         }
     }
 
 
     private fun updateSummary() {
-        // Revert to observing LiveData directly within the fragment as in the original code
         budgetViewModel.budget.observe(viewLifecycleOwner) { budget ->
             val totalBudget = budget?.overallBudget ?: 0.0
-            binding.totalBudgetSummary.text = "Total Budget: ${CurrencyManager.formatAmount(totalBudget)}"
+            val totalBudgetInSelectedCurrency = CurrencyManager.convertAmount(
+                totalBudget, // Stored in EUR
+                "EUR", // From EUR
+                CurrencyManager.selectedCurrency // To selected currency
+            )
+            binding.totalBudgetSummary.text =
+                "Total Budget: ${CurrencyManager.formatAmount(totalBudgetInSelectedCurrency)}"
 
             budgetViewModel.totalExpenses.observe(viewLifecycleOwner) { totalExpenses ->
                 val expenses = totalExpenses ?: 0.0
-                binding.totalExpensesSummary.text = "Total Expenses: ${CurrencyManager.formatAmount(expenses)}"
+                val expensesInSelectedCurrency = CurrencyManager.convertAmount(
+                    expenses, // Stored in EUR
+                    "EUR", // From EUR
+                    CurrencyManager.selectedCurrency // To selected currency
+                )
+                binding.totalExpensesSummary.text =
+                    "Total Expenses: ${CurrencyManager.formatAmount(expensesInSelectedCurrency)}"
 
-                // Calculate the remaining budget
+                // Calculate and convert the remaining budget
                 val remainingBudget = totalBudget - expenses
-                binding.remainingBudgetSummary.text = "Remaining Budget: ${CurrencyManager.formatAmount(remainingBudget)}"
+                val remainingBudgetInSelectedCurrency = CurrencyManager.convertAmount(
+                    remainingBudget, // Stored in EUR
+                    "EUR", // From EUR
+                    CurrencyManager.selectedCurrency // To selected currency
+                )
+                binding.remainingBudgetSummary.text =
+                    "Remaining Budget: ${CurrencyManager.formatAmount(remainingBudgetInSelectedCurrency)}"
             }
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

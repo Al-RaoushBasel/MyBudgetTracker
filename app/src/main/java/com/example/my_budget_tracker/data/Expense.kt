@@ -11,5 +11,6 @@ data class Expense(
     val amount: Double, // Amount spent
     val icon: Int, // Icon identifier (e.g., resource name or URL)
     val date: Date, // Date of the expense
-    val category: String // Category of the expense (e.g., "Food", "Health")
+    val category: String, // Category of the expense (e.g., "Food", "Health")
+    val currency: String // New field for storing the currency
 )
