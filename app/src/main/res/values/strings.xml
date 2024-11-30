@@ -14,22 +14,36 @@
     <!-- Add the missing string resource -->
     <string name="expense_icon_desc">Expense Icon</string>
     <string name="total_spending">Total Spending: $</string>
+    <string name="enter_budget_amount">Enter budget amount</string>
+    <string name="save_budget">Save Budget</string>
+    <string name="amount">Amount</string>
+    <string name="my_budget_tracker">My Budget Tracker</string>
+    <string name="get_started">Get Started</string>
+    <string name="expenses">Expenses</string>
+    <string name="add">Add</string>
+    <string name="expense_added_successfully">Expense added successfully!</string>
+    <string name="monthly_expense_summary">Monthly Expense Summary</string>
 
     <string-array name="expense_categories">
+        <item>Bills</item>
         <item>Food</item>
         <item>Health</item>
         <item>Education</item>
         <item>Insurance</item>
         <item>Shopping</item>
-        <item>Bills</item>
+        <item>Entertainment</item>
+        <item>Other</item>
     </string-array>
 
     <string-array name="category_options">
+        <item>Bills</item>
         <item>Food</item>
         <item>Health</item>
-        <item>Shopping</item>
+        <item>Education</item>
         <item>Insurance</item>
+        <item>Shopping</item>
         <item>Entertainment</item>
+        <item>Other</item>
     </string-array>
 
 

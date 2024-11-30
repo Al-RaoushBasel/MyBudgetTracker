@@ -4,13 +4,11 @@
     <item
         android:id="@+id/action_clear_all"
         android:title="Clear All Expenses"
-        android:orderInCategory="100"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_sort"
         android:title="Sort By"
-        android:orderInCategory="100"
         app:showAsAction="never">
         <menu>
             <item
@@ -22,9 +20,18 @@
             <item
                 android:id="@+id/action_sort_by_category"
                 android:title="Category" />
-
-            <!-- Add more sorting options as needed -->
         </menu>
     </item>
 
+    <item
+        android:id="@+id/action_switch_currency"
+        android:title="Switch Currency"
+        android:orderInCategory="200"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_refresh_rates"
+        android:title="Refresh Rates"
+        android:orderInCategory="300"
+        app:showAsAction="never" />
 </menu>

@@ -1,60 +1,136 @@
 package com.example.my_budget_tracker.ui
 
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.my_budget_tracker.R
+import com.example.my_budget_tracker.data.CategoryBudget
+import com.example.my_budget_tracker.data.CurrencyManager
+import com.example.my_budget_tracker.data.ExpenseDatabase
+import com.example.my_budget_tracker.databinding.FragmentCategoriesBinding
+import com.example.my_budget_tracker.viewModel.BudgetViewModel
+import com.example.my_budget_tracker.viewModel.BudgetViewModelFactory
+import com.google.android.material.snackbar.Snackbar
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [CategoriesFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class CategoriesFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    // --------------------------- Properties ---------------------------
+
+    private var _binding: FragmentCategoriesBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var adapter: CategoryCardAdapter
+    private lateinit var budgetViewModel: BudgetViewModel
+
+    // --------------------------- Lifecycle Methods ---------------------------
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_categories, container, false)
+    ): View {
+        _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
+        setHasOptionsMenu(true)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment categories.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            CategoriesFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupViewModel()
+        setupRecyclerView()
+        observeCategoryBudgets()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_categories, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_reset_all_categories -> {
+                resetAllCategoryBudgets()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // --------------------------- Setup Methods ---------------------------
+
+    private fun setupViewModel() {
+        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
+        val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
+        val factory = BudgetViewModelFactory(
+            requireActivity().application,
+            budgetDao,
+            expenseDao
+        )
+        budgetViewModel = ViewModelProvider(this, factory)[BudgetViewModel::class.java]
+    }
+
+    private fun setupRecyclerView() {
+        adapter = CategoryCardAdapter()
+        binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.categoriesRecyclerView.adapter = adapter
+    }
+
+    // --------------------------- Observation Methods ---------------------------
+
+    private fun observeCategoryBudgets() {
+        budgetViewModel.categoryBudgets().observe(viewLifecycleOwner) { categoryBudgets ->
+            updateCategoryBudgetUI(categoryBudgets)
+        }
+    }
+
+    /**
+     * Updates the category budgets displayed in the RecyclerView, converting them to the selected currency
+     * and calculating the percentage used.
+     */
+    private fun updateCategoryBudgetUI(categoryBudgets: List<CategoryBudget>) {
+        val updatedCategoryBudgets = mutableListOf<CategoryBudget>()
+
+        categoryBudgets.forEach { categoryBudget ->
+            budgetViewModel.getCategoryExpenses(categoryBudget.categoryName).observe(viewLifecycleOwner) { totalExpensesInEUR ->
+                val expensesInSelectedCurrency = CurrencyManager.convertAmount(
+                    totalExpensesInEUR ?: 0.0,
+                    "EUR",
+                    CurrencyManager.selectedCurrency
+                )
+
+                val budgetAmountInSelectedCurrency = CurrencyManager.convertAmount(
+                    categoryBudget.budgetAmount,
+                    "EUR",
+                    CurrencyManager.selectedCurrency
+                )
+
+                val remainingAmountInSelectedCurrency = budgetAmountInSelectedCurrency - expensesInSelectedCurrency
+
+                updatedCategoryBudgets.add(
+                    categoryBudget.copy(
+                        budgetAmount = budgetAmountInSelectedCurrency,
+                        remainingAmount = remainingAmountInSelectedCurrency
+                    )
+                )
+
+                // Update adapter only after all categories are processed
+                if (updatedCategoryBudgets.size == categoryBudgets.size) {
+                    adapter.submitList(updatedCategoryBudgets)
                 }
             }
+        }
+    }
+
+    // --------------------------- Action Methods ---------------------------
+
+    private fun resetAllCategoryBudgets() {
+        budgetViewModel.deleteAllCategoryBudgets()
+        Snackbar.make(requireView(), "All category budgets deleted", Snackbar.LENGTH_SHORT).show()
     }
 }

@@ -13,7 +13,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expenses"
+        android:text="@string/expenses"
         android:textSize="20sp"
         android:textStyle="bold"
         android:paddingBottom="16dp" />
@@ -43,6 +43,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:autofillHints=""
             android:hint="Amount"
             android:inputType="numberDecimal"
             android:padding="12dp"
@@ -54,7 +55,7 @@
         android:id="@+id/add_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add"
+        android:text="@string/add"
         android:backgroundTint="@color/green"
         android:textColor="@android:color/white"
         android:layout_marginBottom="16dp" />
@@ -64,13 +65,13 @@
         android:id="@+id/success_message_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expense added successfully!"
+        android:text="@string/expense_added_successfully"
         android:textColor="@color/green"
         android:textSize="16sp"
         android:gravity="center"
         android:visibility="gone"
-        android:drawableLeft="@drawable/ic_checkmark"
-        android:drawablePadding="8dp" />
+        android:drawablePadding="8dp"
+        app:drawableLeftCompat="@drawable/ic_checkmark" />
 
 
 </LinearLayout>

@@ -12,14 +12,20 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.my_budget_tracker.R
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModel
-import com.example.my_budget_tracker.ViewModel.ExpenseViewModelFactory
+import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.data.Expense
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
+import com.example.my_budget_tracker.viewModel.BudgetViewModel
+import com.example.my_budget_tracker.viewModel.BudgetViewModelFactory
+import com.example.my_budget_tracker.viewModel.ExpenseViewModel
+import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import java.util.Date
 
+@Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
 class AddExpenseFragment : Fragment() {
+
+    // --------------------------- Properties ---------------------------
 
     // Category icon map to link categories to drawable resources
     private val categoryIconMap = mapOf(
@@ -31,86 +37,128 @@ class AddExpenseFragment : Fragment() {
         "Education" to R.drawable.ic_education
     )
 
-    // Initialize expenseViewModel using a factory
+    // ViewModel for managing expenses
     private val expenseViewModel: ExpenseViewModel by viewModels {
         val repository = ExpenseRepository(ExpenseDatabase.getDatabase(requireContext()).expenseDao())
         ExpenseViewModelFactory(repository)
     }
 
+    // ViewModel for managing budgets
+    private val budgetViewModel: BudgetViewModel by viewModels {
+        val application = requireActivity().application
+        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
+        val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
+        BudgetViewModelFactory(application, budgetDao, expenseDao)
+    }
+
+    // --------------------------- Lifecycle Methods ---------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true) // Enable options menu to handle the back button in toolbar
+        setHasOptionsMenu(true) // Enable options menu
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Inflate the layout for this fragment
+        val view = inflater.inflate(R.layout.fragment_add_expense, container, false)
+
+        setupUI(view)
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Enable the back button in the toolbar
-        val activity = requireActivity() as AppCompatActivity
-        activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        activity.supportActionBar?.title = "Add Expense"
-
-        // Handle back button press
-        activity.onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                findNavController().navigateUp() // Navigate up in the navigation stack
-            }
-        })
+        setupToolbar()
+        handleBackButton()
     }
+
+    // --------------------------- Menu Handling ---------------------------
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        //inflater.inflate(R.menu.menu_back, menu) // Ensure you have a menu with a back button if needed
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                findNavController().navigateUp() // Handle toolbar back button
+                findNavController().navigateUp()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_add_expense, container, false)
+    // --------------------------- UI Setup Methods ---------------------------
 
+    private fun setupUI(view: View) {
         val categorySpinner = view.findViewById<Spinner>(R.id.category_spinner)
         val amountEditText = view.findViewById<EditText>(R.id.amount_edit_text)
         val addButton = view.findViewById<Button>(R.id.add_button)
-        val successMessageLayout = view.findViewById<View>(R.id.success_message_layout) // For success message
+        val successMessageLayout = view.findViewById<View>(R.id.success_message_layout)
 
         addButton.setOnClickListener {
-            val name = categorySpinner.selectedItem.toString()
-            val amount = amountEditText.text.toString().toDoubleOrNull() ?: 0.0
-
-            if (name.isNotEmpty() && amount > 0) {
-                // Get the appropriate icon based on category, or use default icon if not found
-                val iconResId = categoryIconMap[name] ?: R.drawable.ic_categories
-
-                // Create an Expense object and insert it
-                val expense = Expense(
-                    name = name,
-                    amount = amount,
-                    icon = iconResId,
-                    date = Date(),
-                    category = name// or System.currentTimeMillis() if using timestamp
-                )
-                expenseViewModel.insertExpense(expense)
-
-                // Show success message
-                successMessageLayout.visibility = View.VISIBLE
-            } else {
-                Toast.makeText(context, "Please enter a valid amount.", Toast.LENGTH_SHORT).show()
-            }
+            handleAddExpense(categorySpinner, amountEditText, successMessageLayout)
         }
+    }
 
-        return view
+    private fun setupToolbar() {
+        val activity = requireActivity() as AppCompatActivity
+        activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        activity.supportActionBar?.title = "Add Expense"
+    }
+
+    private fun handleBackButton() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                findNavController().navigateUp()
+            }
+        })
+    }
+
+    // --------------------------- Expense Handling ---------------------------
+
+    private fun handleAddExpense(
+        categorySpinner: Spinner,
+        amountEditText: EditText,
+        successMessageLayout: View
+    ) {
+        val name = categorySpinner.selectedItem.toString()
+        val amountInput = amountEditText.text.toString().toDoubleOrNull()
+
+        if (name.isNotEmpty() && amountInput != null && amountInput > 0) {
+            val iconResId = categoryIconMap[name] ?: R.drawable.ic_categories
+
+            // Convert entered amount to EUR before storing
+            val amountInEUR = CurrencyManager.convertAmount(
+                amountInput,
+                CurrencyManager.selectedCurrency, // Current selected currency
+                "EUR" // Convert to base currency
+            )
+
+            val expense = Expense(
+                name = name,
+                amount = amountInEUR,
+                icon = iconResId,
+                date = Date(),
+                category = name,
+                currency = "EUR"
+            )
+            expenseViewModel.insertExpense(expense)
+
+            amountEditText.text.clear()
+            successMessageLayout.visibility = View.VISIBLE
+            successMessageLayout.postDelayed({
+                successMessageLayout.visibility = View.GONE
+            }, 2000)
+
+            budgetViewModel.checkBudgetExceeded()
+
+            Toast.makeText(context, "Expense added successfully!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Please enter a valid amount.", Toast.LENGTH_SHORT).show()
+        }
     }
 }

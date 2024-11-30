@@ -3,7 +3,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="8dp"
+    android:background="@color/card_background"
+    android:layout_margin="0dp"
+    >
 
     <ImageView
         android:id="@+id/expense_icon"
@@ -22,19 +25,26 @@
             android:id="@+id/expense_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+        android:textSize="16sp" />
 
         <TextView
             android:id="@+id/expense_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+        />
     </LinearLayout>
 
     <TextView
         android:id="@+id/expense_amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/red"
+        android:layout_gravity="center_vertical"
+    />
 </LinearLayout>

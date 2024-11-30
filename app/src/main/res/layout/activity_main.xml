@@ -34,7 +34,6 @@
         app:itemTextColor="@color/bottom_nav_icon_colors"
         app:menu="@menu/bottom_nav_menu" />
 
-
     <!-- Floating Action Button for adding expenses -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_expense_fab"
