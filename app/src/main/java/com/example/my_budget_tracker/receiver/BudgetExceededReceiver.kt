@@ -5,45 +5,38 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.my_budget_tracker.R
 
+/**
+ * BroadcastReceiver to handle budget exceed notifications.
+ * Listens for the "BUDGET_EXCEEDED" action and triggers a notification.
+ */
 class BudgetExceededReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        println("BudgetExceededReceiver: onReceive called")
-
-        val action = intent.action
-        println("BudgetExceededReceiver: Received intent with action: $action")
-
-        if (action == "com.example.my_budget_tracker.BUDGET_EXCEEDED") {
-            println("BudgetExceededReceiver: Handling BUDGET_EXCEEDED action")
-
+        // Check if the received action matches "BUDGET_EXCEEDED"
+        if (intent.action == "com.example.my_budget_tracker.BUDGET_EXCEEDED") {
+            // Build the notification
             val notification = NotificationCompat.Builder(context, "budget_channel")
-                .setSmallIcon(R.drawable.ic_budget)
-                .setContentTitle("Budget Exceeded")
-                .setContentText("Your expenses have exceeded the overall budget!")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
+                .setSmallIcon(R.drawable.ic_budget) // Small icon for the notification
+                .setContentTitle("Budget Exceeded") // Notification title
+                .setContentText("Your expenses have exceeded the overall budget!") // Notification message
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // High priority for importance
+                .setAutoCancel(true) // Dismiss notification when tapped
                 .build()
 
+            // Check for notification permission
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
+                ) == PackageManager.PERMISSION_GRANTED
             ) {
-                println("BudgetExceededReceiver: Notification permission not granted")
-                return
+                // Display the notification
+                NotificationManagerCompat.from(context).notify(1, notification)
             }
-
-            NotificationManagerCompat.from(context).notify(1, notification)
-            println("BudgetExceededReceiver: Notification displayed")
-        } else {
-            println("BudgetExceededReceiver: Unhandled intent action: $action")
         }
     }
 }
-

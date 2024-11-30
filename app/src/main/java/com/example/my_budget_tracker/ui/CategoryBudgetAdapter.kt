@@ -11,6 +11,7 @@ import com.example.my_budget_tracker.databinding.ItemCategoryBudgetBinding
 
 class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.CategoryBudgetViewHolder>(DIFF_CALLBACK) {
 
+    // --------------------------- Diff Callback ---------------------------
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<CategoryBudget>() {
             override fun areItemsTheSame(oldItem: CategoryBudget, newItem: CategoryBudget): Boolean {
@@ -23,6 +24,8 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
         }
     }
 
+    // --------------------------- Adapter Methods ---------------------------
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryBudgetViewHolder {
         val binding = ItemCategoryBudgetBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CategoryBudgetViewHolder(binding)
@@ -32,21 +35,24 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
         holder.bind(getItem(position))
     }
 
-    // ViewHolder for each category budget item
+    // --------------------------- ViewHolder ---------------------------
+
     inner class CategoryBudgetViewHolder(private val binding: ItemCategoryBudgetBinding) : RecyclerView.ViewHolder(binding.root) {
+
+        // Bind category budget details to the UI
         fun bind(categoryBudget: CategoryBudget) {
             binding.categoryName.text = categoryBudget.categoryName
 
-            // Dynamically format amounts using CurrencyManager
+            // Format and display budget amount
             binding.budgetAmount.text = "Budget Amount: ${CurrencyManager.formatAmount(categoryBudget.budgetAmount)}"
 
             val remainingBudget = categoryBudget.remainingAmount
             val expenses = categoryBudget.budgetAmount - remainingBudget
 
-            // Format and display dynamically
+            // Format and display category budget details
             binding.categoryBudgetDetails.text = "Used ${CurrencyManager.formatAmount(expenses)} out of ${CurrencyManager.formatAmount(categoryBudget.budgetAmount)}"
 
-            // Calculate and set progress
+            // Calculate and display progress
             val progress = if (categoryBudget.budgetAmount > 0) {
                 (expenses / categoryBudget.budgetAmount * 100).toInt()
             } else {
@@ -55,7 +61,8 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
             binding.categoryBudgetProgress.progress = progress
         }
 
-        // Additional method to update progress dynamically
+        // Update progress dynamically (unused but kept for future use)
+        @Suppress("UNUSED")
         fun updateProgress(remainingBudget: Double, totalBudget: Double, expenses: Double) {
             val progress = if (totalBudget > 0) {
                 (expenses / totalBudget * 100).toInt()
@@ -67,11 +74,17 @@ class CategoryBudgetAdapter : ListAdapter<CategoryBudget, CategoryBudgetAdapter.
         }
     }
 
-    // Function to update the category's progress and notify UI
+    // --------------------------- Additional Methods ---------------------------
+
+    /**
+     * Updates the progress for a specific category and refreshes the UI.
+     * This method is unused but kept for future use.
+     */
+    @Suppress("UNUSED")
     fun updateCategoryProgress(categoryName: String, remainingBudget: Double, totalBudget: Double, expenses: Double, progress: Int) {
         val position = currentList.indexOfFirst { it.categoryName == categoryName }
         if (position != -1) {
-            // Update the item in the list and notify the ViewHolder to refresh
+            // Update the item in the list and notify the ViewHolder
             val updatedCategory = currentList[position].copy(
                 remainingAmount = remainingBudget,
                 budgetAmount = totalBudget

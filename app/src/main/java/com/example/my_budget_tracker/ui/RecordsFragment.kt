@@ -11,15 +11,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.my_budget_tracker.R
 import com.example.my_budget_tracker.data.CurrencyManager
-import com.example.my_budget_tracker.viewModel.ExpenseViewModel
-import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.data.ExpenseRepository
+import com.example.my_budget_tracker.viewModel.ExpenseViewModel
+import com.example.my_budget_tracker.viewModel.ExpenseViewModelFactory
 import kotlinx.coroutines.launch
 
 class RecordsFragment : Fragment() {
 
-    val expenseViewModel: ExpenseViewModel by viewModels {
+    // --------------------------- Properties ---------------------------
+    private val expenseViewModel: ExpenseViewModel by viewModels {
         val repository = ExpenseRepository(
             expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
         )
@@ -27,6 +28,8 @@ class RecordsFragment : Fragment() {
     }
     private lateinit var expenseRecyclerView: RecyclerView
     private lateinit var expenseAdapter: ExpenseAdapter
+
+    // --------------------------- Lifecycle Methods ---------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,45 +39,11 @@ class RecordsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = inflater.inflate(R.layout.fragment_records, container, false)
-        expenseRecyclerView = view.findViewById(R.id.expense_recycler_view)
-        expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        // Initialize ExpenseAdapter once with an empty list
-        expenseAdapter = ExpenseAdapter(emptyList())
-        expenseRecyclerView.adapter = expenseAdapter
-
-        // Initialize CurrencyManager if not already done
-        CurrencyManager.initialize(requireContext())
-
-        // Fetch exchange rates only if necessary
-        lifecycleScope.launch {
-            try {
-                CurrencyManager.fetchExchangeRates()
-                //println("Fetched exchange rates: ${CurrencyManager.rates}")
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error fetching rates: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Observe expenses from ViewModel
-        expenseViewModel.allExpenses.observe(viewLifecycleOwner) { expenses ->
-            val convertedExpenses = expenses.map { expense ->
-                val convertedAmount = CurrencyManager.convertAmount(
-                    expense.amount,
-                    "EUR", // Stored in EUR
-                    CurrencyManager.selectedCurrency // Convert to selected currency
-                )
-                println("Converting ${expense.amount} EUR to ${CurrencyManager.selectedCurrency}: $convertedAmount")
-                expense.copy(
-                    amount = convertedAmount,
-                    currency = CurrencyManager.selectedCurrency // Update displayed currency
-                )
-            }
-            expenseAdapter.updateExpenses(convertedExpenses)
-        }
-
+        setupRecyclerView(view)
+        initializeCurrencyManager()
+        observeExpenses()
         return view
     }
 
@@ -112,7 +81,59 @@ class RecordsFragment : Fragment() {
         }
     }
 
-    // Show a dialog to switch currencies
+    // --------------------------- Setup Methods ---------------------------
+
+    /**
+     * Sets up the RecyclerView with the ExpenseAdapter.
+     */
+    private fun setupRecyclerView(view: View) {
+        expenseRecyclerView = view.findViewById(R.id.expense_recycler_view)
+        expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        expenseAdapter = ExpenseAdapter(emptyList())
+        expenseRecyclerView.adapter = expenseAdapter
+    }
+
+    /**
+     * Initializes the CurrencyManager and fetches exchange rates if necessary.
+     */
+    private fun initializeCurrencyManager() {
+        CurrencyManager.initialize(requireContext())
+        lifecycleScope.launch {
+            try {
+                CurrencyManager.fetchExchangeRates()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error fetching rates: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // --------------------------- Observation Methods ---------------------------
+
+    /**
+     * Observes expenses from the ViewModel and updates the RecyclerView with converted values.
+     */
+    private fun observeExpenses() {
+        expenseViewModel.allExpenses.observe(viewLifecycleOwner) { expenses ->
+            val convertedExpenses = expenses.map { expense ->
+                val convertedAmount = CurrencyManager.convertAmount(
+                    expense.amount,
+                    "EUR", // Base currency
+                    CurrencyManager.selectedCurrency // Convert to selected currency
+                )
+                expense.copy(
+                    amount = convertedAmount,
+                    currency = CurrencyManager.selectedCurrency // Update displayed currency
+                )
+            }
+            expenseAdapter.updateExpenses(convertedExpenses)
+        }
+    }
+
+    // --------------------------- Action Methods ---------------------------
+
+    /**
+     * Shows a dialog for switching currencies.
+     */
     private fun showCurrencySwitchDialog() {
         val currencies = arrayOf("EUR", "USD")
         var selectedCurrency = CurrencyManager.selectedCurrency
@@ -133,7 +154,9 @@ class RecordsFragment : Fragment() {
             .show()
     }
 
-    // Refresh exchange rates
+    /**
+     * Refreshes exchange rates and updates the RecyclerView.
+     */
     private fun refreshExchangeRates() {
         lifecycleScope.launch {
             try {
@@ -146,16 +169,17 @@ class RecordsFragment : Fragment() {
         }
     }
 
-    // Update the RecyclerView to reflect new currency or rates
+    /**
+     * Updates the RecyclerView with the latest expenses and converted values.
+     */
     private fun updateRecyclerView() {
         val expenses = expenseViewModel.allExpenses.value ?: emptyList()
         val convertedExpenses = expenses.map { expense ->
             val convertedAmount = CurrencyManager.convertAmount(
-                expense.amount, // Stored in EUR
+                expense.amount,
                 "EUR", // Base currency
                 CurrencyManager.selectedCurrency // Convert to selected currency
             )
-            println("Converting ${expense.amount} EUR to ${CurrencyManager.selectedCurrency}: $convertedAmount")
             expense.copy(
                 amount = convertedAmount,
                 currency = CurrencyManager.selectedCurrency // Update displayed currency

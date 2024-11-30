@@ -10,21 +10,25 @@ import com.example.my_budget_tracker.data.CategoryBudget
 import com.example.my_budget_tracker.data.CurrencyManager
 import com.example.my_budget_tracker.data.ExpenseDatabase
 import com.example.my_budget_tracker.databinding.FragmentCategoriesBinding
-import com.example.my_budget_tracker.viewmodel.BudgetViewModel
-import com.example.my_budget_tracker.viewmodel.BudgetViewModelFactory
+import com.example.my_budget_tracker.viewModel.BudgetViewModel
+import com.example.my_budget_tracker.viewModel.BudgetViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 
 class CategoriesFragment : Fragment() {
+
+    // --------------------------- Properties ---------------------------
 
     private var _binding: FragmentCategoriesBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: CategoryCardAdapter
     private lateinit var budgetViewModel: BudgetViewModel
 
+    // --------------------------- Lifecycle Methods ---------------------------
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentCategoriesBinding.inflate(inflater, container, false)
         setHasOptionsMenu(true)
         return binding.root
@@ -33,26 +37,9 @@ class CategoriesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize ViewModel
-        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
-        val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
-        val factory = BudgetViewModelFactory(
-            requireActivity().application, // Pass the Application context
-            budgetDao,
-            expenseDao
-        )
-        budgetViewModel = ViewModelProvider(this, factory).get(BudgetViewModel::class.java)
-
-
-        // Set up RecyclerView
-        adapter = CategoryCardAdapter()
-        binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.categoriesRecyclerView.adapter = adapter
-
-        // Observe category budgets and update UI
-        budgetViewModel.categoryBudgets().observe(viewLifecycleOwner) { categoryBudgets ->
-            updateCategoryBudgetUI(categoryBudgets)
-        }
+        setupViewModel()
+        setupRecyclerView()
+        observeCategoryBudgets()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -70,9 +57,36 @@ class CategoriesFragment : Fragment() {
         }
     }
 
-    private fun resetAllCategoryBudgets() {
-        budgetViewModel.deleteAllCategoryBudgets()
-        Snackbar.make(requireView(), "All category budgets deleted", Snackbar.LENGTH_SHORT).show()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    // --------------------------- Setup Methods ---------------------------
+
+    private fun setupViewModel() {
+        val budgetDao = ExpenseDatabase.getDatabase(requireContext()).budgetDao()
+        val expenseDao = ExpenseDatabase.getDatabase(requireContext()).expenseDao()
+        val factory = BudgetViewModelFactory(
+            requireActivity().application,
+            budgetDao,
+            expenseDao
+        )
+        budgetViewModel = ViewModelProvider(this, factory)[BudgetViewModel::class.java]
+    }
+
+    private fun setupRecyclerView() {
+        adapter = CategoryCardAdapter()
+        binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.categoriesRecyclerView.adapter = adapter
+    }
+
+    // --------------------------- Observation Methods ---------------------------
+
+    private fun observeCategoryBudgets() {
+        budgetViewModel.categoryBudgets().observe(viewLifecycleOwner) { categoryBudgets ->
+            updateCategoryBudgetUI(categoryBudgets)
+        }
     }
 
     /**
@@ -82,19 +96,18 @@ class CategoriesFragment : Fragment() {
     private fun updateCategoryBudgetUI(categoryBudgets: List<CategoryBudget>) {
         val updatedCategoryBudgets = mutableListOf<CategoryBudget>()
 
-        // For each category budget, calculate expenses and remaining amounts
         categoryBudgets.forEach { categoryBudget ->
             budgetViewModel.getCategoryExpenses(categoryBudget.categoryName).observe(viewLifecycleOwner) { totalExpensesInEUR ->
                 val expensesInSelectedCurrency = CurrencyManager.convertAmount(
                     totalExpensesInEUR ?: 0.0,
-                    "EUR", // From EUR
-                    CurrencyManager.selectedCurrency // To selected currency
+                    "EUR",
+                    CurrencyManager.selectedCurrency
                 )
 
                 val budgetAmountInSelectedCurrency = CurrencyManager.convertAmount(
                     categoryBudget.budgetAmount,
-                    "EUR", // Base currency
-                    CurrencyManager.selectedCurrency // Convert to selected currency
+                    "EUR",
+                    CurrencyManager.selectedCurrency
                 )
 
                 val remainingAmountInSelectedCurrency = budgetAmountInSelectedCurrency - expensesInSelectedCurrency
@@ -114,8 +127,10 @@ class CategoriesFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    // --------------------------- Action Methods ---------------------------
+
+    private fun resetAllCategoryBudgets() {
+        budgetViewModel.deleteAllCategoryBudgets()
+        Snackbar.make(requireView(), "All category budgets deleted", Snackbar.LENGTH_SHORT).show()
     }
 }

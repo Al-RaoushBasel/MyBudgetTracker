@@ -5,21 +5,31 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.my_budget_tracker.data.CurrencyManager
-import kotlinx.coroutines.launch
 import com.example.my_budget_tracker.data.Expense
 import com.example.my_budget_tracker.data.ExpenseRepository
+import kotlinx.coroutines.launch
 
+/**
+ * ViewModel for managing expense data and business logic.
+ */
 class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() {
 
-    // Expose all expenses as LiveData to be observed in the UI
+    // --------------------------- Properties ---------------------------
+
+    // LiveData for all expenses, exposed to the UI
     private val _allExpenses = MutableLiveData<List<Expense>>()
     val allExpenses: LiveData<List<Expense>> = repository.getAllExpenses()
 
     init {
-        fetchAllExpenses()
+        fetchAllExpenses() // Load expenses on initialization
     }
 
-    // Fetch all expenses and convert them to the selected currency
+    // --------------------------- Data Fetching ---------------------------
+
+    /**
+     * Fetches all expenses from the repository, converts them to the selected currency,
+     * and updates LiveData.
+     */
     private fun fetchAllExpenses() {
         viewModelScope.launch {
             val expenses = repository.getAllExpensesValue()
@@ -37,19 +47,32 @@ class ExpenseViewModel(private val repository: ExpenseRepository) : ViewModel() 
         }
     }
 
-    // Function to insert an expense
+    // --------------------------- Insert Operations ---------------------------
+
+    /**
+     * Inserts a new expense and refreshes the expense list.
+     */
     fun insertExpense(expense: Expense) = viewModelScope.launch {
         repository.insertExpense(expense)
-        fetchAllExpenses() // Refresh the expenses after insertion
+        fetchAllExpenses() // Refresh the list after insertion
     }
 
-    // Function to delete all expenses
+    // --------------------------- Delete Operations ---------------------------
+
+    /**
+     * Deletes all expenses and clears the LiveData.
+     */
     fun deleteAllExpenses() = viewModelScope.launch {
         repository.deleteAllExpenses()
-        _allExpenses.postValue(emptyList()) // Clear the expenses in LiveData
+        _allExpenses.postValue(emptyList()) // Clear LiveData after deletion
     }
 
-    // Refresh expenses when the currency changes
+    // --------------------------- Refresh Operations ---------------------------
+
+    /**
+     * Refreshes the expense list, ensuring values are converted to the selected currency.
+     */
+    @Suppress("unused")
     fun refreshExpenses() {
         fetchAllExpenses()
     }

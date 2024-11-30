@@ -12,6 +12,7 @@ import com.example.my_budget_tracker.databinding.ItemCategoryCardBinding
 
 class CategoryCardAdapter : ListAdapter<CategoryBudget, CategoryCardAdapter.CategoryCardViewHolder>(DIFF_CALLBACK) {
 
+    // --------------------------- Diff Callback ---------------------------
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<CategoryBudget>() {
             override fun areItemsTheSame(oldItem: CategoryBudget, newItem: CategoryBudget): Boolean {
@@ -24,6 +25,8 @@ class CategoryCardAdapter : ListAdapter<CategoryBudget, CategoryCardAdapter.Cate
         }
     }
 
+    // --------------------------- Adapter Methods ---------------------------
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryCardViewHolder {
         val binding = ItemCategoryCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CategoryCardViewHolder(binding)
@@ -34,7 +37,13 @@ class CategoryCardAdapter : ListAdapter<CategoryBudget, CategoryCardAdapter.Cate
         holder.bind(categoryBudget)
     }
 
+    // --------------------------- ViewHolder ---------------------------
+
     inner class CategoryCardViewHolder(private val binding: ItemCategoryCardBinding) : RecyclerView.ViewHolder(binding.root) {
+
+        /**
+         * Binds the `CategoryBudget` data to the UI components of the category card.
+         */
         fun bind(categoryBudget: CategoryBudget) {
             // Set category name
             binding.categoryName.text = categoryBudget.categoryName
@@ -50,15 +59,15 @@ class CategoryCardAdapter : ListAdapter<CategoryBudget, CategoryCardAdapter.Cate
                 0
             }
 
-            // Update UI
+            // Update UI elements
             binding.categoryAmountSpent.text = CurrencyManager.formatAmount(spentAmount)
             binding.categoryProgress.progress = percentage
             binding.categoryPercentage.text = "$percentage%"
         }
 
-
-
-
+        /**
+         * Returns the appropriate icon resource ID based on the category name.
+         */
         private fun getCategoryIcon(categoryName: String): Int {
             return when (categoryName) {
                 "Bills" -> R.drawable.ic_bills
@@ -72,6 +81,4 @@ class CategoryCardAdapter : ListAdapter<CategoryBudget, CategoryCardAdapter.Cate
             }
         }
     }
-
-
 }

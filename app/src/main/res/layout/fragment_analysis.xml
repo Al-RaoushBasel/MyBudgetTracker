@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Monthly Expense Summary"
+        android:text="@string/monthly_expense_summary"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@android:color/black"
