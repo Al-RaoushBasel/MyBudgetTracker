@@ -50,6 +50,10 @@
 
 ## 📸 Screenshots
 
+![Screenshot 2024-12-06 194936](https://github.com/user-attachments/assets/1b9945cc-8084-42fb-99d2-11da7dbe77e0)
+![Screenshot 2024-12-06 194956](https://github.com/user-attachments/assets/0039e210-d496-4eda-a052-4cb6ae7e1e10)
+![Screenshot 2024-12-06 195127](https://github.com/user-attachments/assets/9b307d47-356b-4ea1-a4b8-c2746bd9a272)
+![Screenshot 2024-12-06 195149](https://github.com/user-attachments/assets/55752b23-4430-408d-aa10-ebeb9c50ff82)
 
 
 ---
